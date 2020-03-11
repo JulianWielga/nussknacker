@@ -7,8 +7,15 @@ import Panel from "react-bootstrap/lib/Panel"
 import classNames from "classnames"
 import {getIsCollapsed} from "../../reducers/selectors/toolbars"
 import ErrorBoundary from "react-error-boundary"
+import {ReactComponent as CollapseIcon} from "../../assets/img/arrows/panel-hide-arrow.svg"
 
-export function CollapsibleToolbar({title, children, isHidden, id}: PropsWithChildren<{ id?: string, title?: string, isHidden?: boolean }>) {
+type Props = PropsWithChildren<{
+  id?: string,
+  title?: string,
+  isHidden?: boolean,
+}>
+
+export function CollapsibleToolbar({title, children, isHidden, id}: Props) {
   if (isHidden || !Children.count(children)) {
     return null
   }
@@ -19,6 +26,7 @@ export function CollapsibleToolbar({title, children, isHidden, id}: PropsWithChi
   const [isCollapsing, setIsCollapsing] = useState(false)
   const [isExpanding, setIsExpanding] = useState(false)
   const onToggle = () => id && dispatch(toggleToolbar(id, !isCollapsed))
+  const isCollapsible = !!id
 
   const {tabIndex, ...handlerProps} = useDragHandler()
 
@@ -36,8 +44,11 @@ export function CollapsibleToolbar({title, children, isHidden, id}: PropsWithChi
       >
         {title ? (
           <Panel.Heading {...handlerProps}>
-            <Panel.Title toggle={!!id}>
-              {title}
+            <Panel.Title toggle>
+              <div className={styles.collapseTitle}>{title}</div>
+              {isCollapsible && (
+                <CollapseIcon className={styles.collapseIcon}/>
+              )}
             </Panel.Title>
           </Panel.Heading>
         ) : null}
