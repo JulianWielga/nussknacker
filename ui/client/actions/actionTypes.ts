@@ -13,6 +13,7 @@ export type ActionTypes =
     | "UNGROUP"
     | "EXPAND_GROUP"
     | "COLLAPSE_GROUP"
+    | "COLLAPSE_ALL_GROUPS"
     | "LOGGED_USER"
     | "UI_SETTINGS"
     | "PROCESS_DEFINITION_DATA"
@@ -61,3 +62,4 @@ export type ActionTypes =
     | "UNDO"
     | "REDO"
     | "CLEAR"
+    | "APPEND_METADATA"

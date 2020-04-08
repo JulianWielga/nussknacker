@@ -5,8 +5,9 @@ import NodeUtils from "../../components/graph/NodeUtils"
 import {DialogType} from "../../components/modals/Dialogs"
 import history from "../../history"
 import {ThunkAction} from "../reduxTypes"
-import {Edge, NodeType} from "./models"
+import {Edge, NodeType} from "../../types"
 import {EventInfo, reportEvent} from "./reportEvent"
+import {collapseAllGroups} from "./groups"
 
 export type DisplayModalNodeDetailsAction = {
   type: "DISPLAY_MODAL_NODE_DETAILS",
@@ -73,6 +74,8 @@ export function toggleModalDialog(openDialog: DialogType): ThunkAction {
       action: "button_click",
       name: openDialog.toLowerCase(),
     }))
+
+    dispatch(collapseAllGroups())
 
     return dispatch({
       type: "TOGGLE_MODAL_DIALOG",

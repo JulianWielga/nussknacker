@@ -5,7 +5,7 @@ import nodeAttributes from "../../../assets/json/nodeAttributes"
 import EspModalStyles from "../../../common/EspModalStyles"
 import SvgDiv from "../../SvgDiv"
 import NodeUtils from "../NodeUtils"
-import {getIconHref} from "../EspNode"
+import {getIconHref} from "../getIconHref"
 
 const HeaderType = {
   SUBTYPE_DOCS: 1,

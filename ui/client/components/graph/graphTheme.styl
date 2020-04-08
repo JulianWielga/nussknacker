@@ -6,3 +6,36 @@
     .marker-target
         stroke white
         fill white
+
+.nodeIcon
+    &:not(:hover)
+        opacity 0.75
+
+    &:hover
+        opacity 1
+
+
+.joint-type-basic-rect
+    pointer-events bounding-box
+
+    &:hover
+        rect
+            fill red
+
+
+.joint-type-custom-genericmodel
+    &:not(:hover)
+        .nodeIcon
+            display: none
+
+    &:hover
+        .nodeIcon
+            display: block
+
+.nodeIconForceHoverBox
+    .nodeIcon
+        display: block
+
+.nodeIconForceNoHoverBox
+    .nodeIcon
+        display: none

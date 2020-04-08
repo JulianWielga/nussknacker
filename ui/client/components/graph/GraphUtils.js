@@ -1,4 +1,4 @@
-import NodeUtils from "./NodeUtils"
+import NodeUtils from "./NodeUtils.ts"
 
 export function mapProcessWithNewNode(process, before, after) {
   return {
@@ -42,7 +42,12 @@ export function canInjectNode(process, sourceId, middleManId, targetId, processD
   const processAfterDisconnection = deleteEdge(process, sourceId, targetId)
   const canConnectSourceToMiddleMan = NodeUtils.canMakeLink(sourceId, middleManId, processAfterDisconnection, processDefinitionData)
   const processWithConnectedSourceAndMiddleMan = addEdge(processAfterDisconnection, sourceId, middleManId)
-  const canConnectMiddleManToTarget = NodeUtils.canMakeLink(middleManId, targetId, processWithConnectedSourceAndMiddleMan, processDefinitionData)
+  const canConnectMiddleManToTarget = NodeUtils.canMakeLink(
+    middleManId,
+    targetId,
+    processWithConnectedSourceAndMiddleMan,
+    processDefinitionData,
+  )
   return canConnectSourceToMiddleMan && canConnectMiddleManToTarget
 }
 
@@ -60,18 +65,18 @@ function addEdge(process, fromId, toId) {
   }
 }
 
-export function computeBoundingRect(expandedGroup, layout, nodes, nodeHeight, margin) {
+export function computeBoundingRect(expandedGroup, layout, cells, margin) {
+  const nodes = expandedGroup.nodes.map(n => cells.find(c => c.id == n))
 
-  const widthsHeights = expandedGroup.nodes
-    .map(n => {
-      const bbox = nodes.find(node => node.id == n).get("size")
-      const layoutForNode = ((layout || []).find(k => k.id == n) || {}).position || {}
-      return {height: nodeHeight, width: bbox.width, x: layoutForNode.x || 0, y: layoutForNode.y || 0}
-    })
+  const widthsHeights = nodes.map(cell => {
+    const {width, height} = cell.get("size")
+    const position = cell.get("position")
+    const layoutForNode = layout?.find(k => k.id == cell.id)?.position
+    return {height, width, x: layoutForNode?.x || position.x, y: layoutForNode?.y || position.y}
+  })
   const x = _.min(widthsHeights.map(wh => wh.x)) - margin
-  const y =  _.min(widthsHeights.map(wh => wh.y)) - margin
+  const y = _.min(widthsHeights.map(wh => wh.y)) - margin
   const width = _.max(widthsHeights.map((wh) => wh.x + wh.width - x)) + margin
   const height = _.max(widthsHeights.map((wh) => wh.y + wh.height - y)) + margin
   return {x, y, width, height}
-
 }

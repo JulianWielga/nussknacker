@@ -2,6 +2,11 @@ import _ from "lodash"
 
 import * as GraphUtils from "../components/graph/GraphUtils"
 import NodeUtils from "../components/graph/NodeUtils"
+import * as LayoutUtils from "./layoutUtils"
+import * as GroupsUtils from "./groupsUtils"
+import {reducer as groupsReducer} from "./groups"
+import reduceReducers from "reduce-reducers"
+import {createUniqueNodeId} from "../components/graph/NodeIdUtils"
 
 //TODO: We should change namespace from graphReducer to currentlyDisplayedProcess
 
@@ -20,10 +25,18 @@ const emptyGraphState = {
   businessView: false,
   processState: null,
   processStateLoaded: false,
+  groups: [],
 }
 
 const STATE_PROPERTY_NAME = "groupingState"
-export function reducer(state, action) {
+
+export const reducer = reduceReducers(
+  emptyGraphState,
+  graphReducer,
+  groupsReducer,
+)
+
+export function graphReducer(state, action) {
   switch (action.type) {
     case "PROCESS_LOADING": {
       return {
@@ -57,13 +70,16 @@ export function reducer(state, action) {
       }
     }
     case "DISPLAY_PROCESS": {
+      const json = action.fetchedProcessDetails.json
+      const nodeToDisplay = json.properties
       return {
         ...state,
-        processToDisplay: action.fetchedProcessDetails.json,
+        processToDisplay: json,
         fetchedProcessDetails: action.fetchedProcessDetails,
         graphLoading: false,
-        nodeToDisplay: action.fetchedProcessDetails.json.properties,
-        layout: [], //needed for displaying historical version
+        nodeToDisplay: nodeToDisplay,
+        layout: LayoutUtils.fromString(nodeToDisplay.additionalFields?.properties?.layout),
+        groups: GroupsUtils.fromString(nodeToDisplay.additionalFields?.properties?.expandedGroups),
       }
     }
     case "LOADING_FAILED": {
@@ -134,7 +150,7 @@ export function reducer(state, action) {
       }
     }
     case "DELETE_NODES": {
-      const stateAfterDelete =_.reduce(action.ids, (state, idToDelete) => {
+      const stateAfterDelete = _.reduce(action.ids, (state, idToDelete) => {
         const stateAfterNodeDelete = updateAfterNodeDelete(state, idToDelete)
         const newSubprocessVersions = removeSubprocessVersionForLastSubprocess(stateAfterNodeDelete.processToDisplay, idToDelete)
         const processToDisplay = GraphUtils.deleteNode(stateAfterNodeDelete.processToDisplay, idToDelete)
@@ -182,7 +198,7 @@ export function reducer(state, action) {
     case "NODE_ADDED": {
       return addNodes(
         state,
-        prepareNewNodesWithLayout(state,[{
+        prepareNewNodesWithLayout(state, [{
           node: action.node,
           position: action.position,
         }], false),
@@ -216,6 +232,12 @@ export function reducer(state, action) {
           ...state.processToDisplay,
           validationResult: action.validationResult,
         },
+      }
+    }
+    case "APPEND_METADATA": {
+      return {
+        ...state,
+        processToDisplay: GroupsUtils.appendToProcess(LayoutUtils.appendToProcess(state.processToDisplay, state.layout), state.groups),
       }
     }
     //TODO: handle it differently?
@@ -258,7 +280,7 @@ export function reducer(state, action) {
           ...state,
           processToDisplay: NodeUtils.createGroup(state.processToDisplay, state.groupingState),
           layout: [],
-        } :  state
+        } : state
       return _.omit(withUpdatedGroups, STATE_PROPERTY_NAME)
     }
     case "CANCEL_GROUPING": {
@@ -273,6 +295,7 @@ export function reducer(state, action) {
       }
     }
     case "EXPAND_GROUP":
+    case "COLLAPSE_ALL_GROUPS":
     case "COLLAPSE_GROUP": {
       return {
         ...state,
@@ -318,7 +341,7 @@ function canGroup(state, newNode) {
   const newNodeId = newNode.id
   const currentGrouping = state.groupingState
   return !NodeUtils.nodeIsGroup(newNode) && currentGrouping.length == 0 ||
-    currentGrouping.find(nodeId => state.processToDisplay.edges.find(edge => edge.from == nodeId && edge.to == newNodeId ||  edge.to == nodeId && edge.from == newNodeId))
+    currentGrouping.find(nodeId => state.processToDisplay.edges.find(edge => edge.from == nodeId && edge.to == newNodeId || edge.to == nodeId && edge.from == newNodeId))
 }
 
 function updateAfterNodeIdChange(layout, process, oldId, newId) {
@@ -349,17 +372,6 @@ function updateAfterNodeDelete(state, idToDelete) {
     processToDisplay: withGroupsUpdated,
     layout: layoutWithoutNode,
   }
-}
-
-function createUniqueNodeId(initialId, usedIds, isCopy) {
-  return initialId && !_.includes(usedIds, initialId) ?
-    initialId :
-    generateUniqueNodeId(initialId, usedIds, 1, isCopy)
-}
-
-function generateUniqueNodeId(initialId, usedIds, nodeCounter, isCopy) {
-  const newId = isCopy ? `${initialId} (copy ${nodeCounter})` : `${initialId} ${nodeCounter}`
-  return _.includes(usedIds, newId) ? generateUniqueNodeId(initialId ,usedIds, nodeCounter + 1, isCopy) : newId
 }
 
 function removeSubprocessVersionForLastSubprocess(processToDisplay, idToDelete) {

@@ -12,11 +12,12 @@ import ProcessUtils from "../../../common/ProcessUtils"
 import TestResultUtils from "../../../common/TestResultUtils"
 import HttpService from "../../../http/HttpService"
 import cssVariables from "../../../stylesheets/_variables.styl"
-import {BareGraph} from "../Graph"
 import NodeUtils from "../NodeUtils"
+import {SubProcessGraph} from "../SubProcessGraph.tsx"
 import NodeDetailsContent from "./NodeDetailsContent"
 import NodeDetailsModalHeader from "./NodeDetailsModalHeader"
 import NodeGroupDetailsContent from "./NodeGroupDetailsContent"
+import {getExpandedGroups} from "../../../reducers/selectors/groups"
 
 class NodeDetailsModal extends React.Component {
 
@@ -127,7 +128,7 @@ class NodeDetailsModal extends React.Component {
     //we don't use _.get here, because currentNodeId can contain spaces etc...
     const subprocessCounts = (this.props.processCounts[this.state.currentNodeId] || {}).subprocessCounts || {}
     return (
-      <BareGraph
+      <SubProcessGraph
         processCounts={subprocessCounts}
         processToDisplay={this.state.subprocessContent}
         height={`${parseInt(cssVariables.modalContentMaxHeight)/3}px`}
@@ -228,7 +229,7 @@ function mapState(state) {
     showNodeDetailsModal: state.ui.showNodeDetailsModal,
     testResults: state.graphReducer.testResults,
     processDefinitionData: processDefinitionData,
-    expandedGroups: state.ui.expandedGroups,
+    expandedGroups: getExpandedGroups(state),
     processCounts: state.graphReducer.processCounts || {},
     businessView: state.graphReducer.businessView,
 

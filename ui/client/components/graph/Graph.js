@@ -1,25 +1,24 @@
-import * as dagre from "dagre"
 import * as joint from "jointjs"
 import "jointjs/dist/joint.css"
-import _, {cloneDeep} from "lodash"
+import _, {cloneDeep, isEmpty, isEqual} from "lodash"
 import PropTypes from "prop-types"
 import React from "react"
-import {DropTarget} from "react-dnd"
-import {connect} from "react-redux"
 import svgPanZoom from "svg-pan-zoom"
-import ActionsUtils from "../../actions/ActionsUtils"
-import cssVariables from "../../stylesheets/_variables.styl"
+import {getProcessCategory, getSelectionState} from "../../reducers/selectors/graph"
+import {getLoggedUser, getProcessDefinitionData} from "../../reducers/selectors/settings"
 import "../../stylesheets/graph.styl"
 import "./svg-export/export.styl"
-import EspNode from "./EspNode"
+import {directedLayout} from "./directedLayout"
+import {getPaper} from "./getPaper"
 import * as GraphUtils from "./GraphUtils"
 import * as JointJsGraphUtils from "./JointJsGraphUtils"
 import EdgeDetailsModal from "./node-modal/EdgeDetailsModal"
 import NodeDetailsModal from "./node-modal/NodeDetailsModal"
-import NodeUtils from "./NodeUtils.js"
+import NodeUtils from "./NodeUtils"
+import {redrawGraph} from "./redrawGraph"
 import {prepareSvg} from "./svg-export/prepareSvg"
 
-class Graph extends React.Component {
+export class Graph extends React.Component {
 
   redrawing = false
 
@@ -52,14 +51,17 @@ class Graph extends React.Component {
   }
 
   componentDidMount() {
+    const {processCounts, layout, expandedGroups, nodeToDisplay, processDefinitionData, processToDisplay} = this.props
     this.processGraphPaper = this.createPaper()
-    this.drawGraph(this.props.processToDisplay, this.props.layout, this.props.processCounts, this.props.processDefinitionData, this.props.expandedGroups)
+
+    this.drawGraph(processToDisplay, layout, processCounts, processDefinitionData, expandedGroups)
     this._prepareContentForExport()
+
     this.panAndZoom = this.enablePanZoom()
-    this.processGraphPaper.scaleContentToFit({padding: 75, maxScale: 1.25})
     this.changeNodeDetailsOnClick()
     this.hooverHandling()
     this.cursorBehaviour()
+
     this.highlightNodes(this.props.processToDisplay, this.props.nodeToDisplay)
   }
 
@@ -77,14 +79,32 @@ class Graph extends React.Component {
   }
 
   componentWillUpdate(nextProps, nextState) {
-    const processChanged = !_.isEqual(this.props.processToDisplay, nextProps.processToDisplay) ||
-      !_.isEqual(this.props.layout, nextProps.layout) ||
-      !_.isEqual(this.props.processCounts, nextProps.processCounts) ||
-      !_.isEqual(this.props.groupingState, nextProps.groupingState) ||
-      !_.isEqual(this.props.expandedGroups, nextProps.expandedGroups) ||
-      !_.isEqual(this.props.processDefinitionData, nextProps.processDefinitionData)
+    const sameProcess = isEqual(this.props.processToDisplay, nextProps.processToDisplay)
+    const sameLayout = isEqual(this.props.layout, nextProps.layout) || !this.props.layout.length
+    const sameCounts = isEqual(this.props.processCounts, nextProps.processCounts)
+    const sameGroupingState = isEqual(this.props.groupingState, nextProps.groupingState)
+    const sameExpandedGroups = isEqual(this.props.expandedGroups, nextProps.expandedGroups)
+    const sameProcesDefinition = isEqual(this.props.processDefinitionData, nextProps.processDefinitionData)
+
+    const tests = [
+      sameProcess,
+      sameLayout,
+      sameCounts,
+      sameGroupingState,
+      sameExpandedGroups,
+      sameProcesDefinition,
+    ]
+
+    const processChanged = tests.some(t => t === false)
+
     if (processChanged) {
-      this.drawGraph(nextProps.processToDisplay, nextProps.layout, nextProps.processCounts, nextProps.processDefinitionData, nextProps.expandedGroups)
+      this.drawGraph(
+        nextProps.processToDisplay,
+        nextProps.layout,
+        nextProps.processCounts,
+        nextProps.processDefinitionData,
+        nextProps.expandedGroups,
+      )
     }
 
     //when e.g. layout changed we have to remember to highlight nodes
@@ -107,21 +127,19 @@ class Graph extends React.Component {
     })
   }
 
-  directedLayout() {
-    //TODO `layout` method can take graph or cells
-    //when joint.layout.DirectedGraph.layout(this.graph) is used here
-    //  then `toFront()` method works as expected but there are issues with group fold/unfold
-    //when joint.layout.DirectedGraph.layout(this.graph.getCells().filter(cell => !cell.get('backgroundObject')) is used here
-    // then `toFront()` method does not work at all, but group fold/unfold works just fine
-    joint.layout.DirectedGraph.layout(this.graph.getCells().filter(cell => !cell.get("backgroundObject")), {
-      graphlib: dagre.graphlib,
-      dagre: dagre,
-      nodeSep: 0,
-      edgeSep: 0,
-      rankSep: 75,
-      minLen: 0,
-      rankDir: "TB",
-    })
+  directedLayout(layout) {
+    this.processGraphPaper.freeze()
+    if (isEmpty(layout)) {
+      directedLayout(this.graph)
+    } else {
+      layout.forEach(el => {
+        const cell = this.graph.getCell(el.id)
+        if (cell && JSON.stringify(cell.get("position")) !== JSON.stringify(el.position)) {
+          cell.set("position", el.position)
+        }
+      })
+    }
+    this.processGraphPaper.unfreeze()
     this.changeLayoutIfNeeded()
   }
 
@@ -138,39 +156,19 @@ class Graph extends React.Component {
   }
 
   validateConnection = (cellViewS, magnetS, cellViewT, magnetT) => {
+    const {processToDisplay, processDefinitionData} = this.props
     const from = cellViewS.model.id
     const to = cellViewT.model.id
-    return magnetT && NodeUtils.canMakeLink(from, to, this.props.processToDisplay, this.props.processDefinitionData)
+    return magnetT && NodeUtils.canMakeLink(from, to, processToDisplay, processDefinitionData)
   }
 
   createPaper = () => {
     const canWrite = this.props.loggedUser.canWrite(this.props.processCategory) && !this.props.readonly
     const {height = "100%", width = "100%"} = this.props
-    return new joint.dia.Paper({
-      el: this.getEspGraphRef(),
-      gridSize: 1,
-      height,
-      width,
-      model: this.graph,
-      snapLinks: {radius: 75},
-      interactive: function (cellView) {
-        const model = cellView.model
-        if (!canWrite) {
-          return false
-        } else if (model instanceof joint.dia.Link) {
-          // Disable the default vertex add and label move functionality on pointerdown.
-          return {vertexAdd: false, labelMove: false}
-        } else if (model.get && model.get("backgroundObject")) {
-          //Disable moving group rect
-          return false
-        } else {
-          return true
-        }
-      },
-      linkPinning: false,
-      defaultLink: EspNode.makeLink({}),
-      validateConnection: this.validateConnection,
-    })
+    const el = this.getEspGraphRef()
+    const model = this.graph
+    const validateConnection = this.validateConnection
+    return getPaper({el, model, validateConnection, width, height}, canWrite)
       .on("cell:pointerup", (cellView, evt, x, y) => {
         this.changeLayoutIfNeeded()
         this.handleInjectBetweenNodes(cellView)
@@ -217,7 +215,13 @@ class Graph extends React.Component {
       } else if (NodeUtils.nodesAreInOneGroup(this.props.processToDisplay, [sourceNode.id, targetNode.id])) {
         // TODO: handle inject when source and target are in one group
         this.props.notificationActions.info("Injecting node in group is not possible yet")
-      } else if (GraphUtils.canInjectNode(this.props.processToDisplay, sourceNode.id, middleMan.id, targetNode.id, this.props.processDefinitionData)) {
+      } else if (GraphUtils.canInjectNode(
+        this.props.processToDisplay,
+        sourceNode.id,
+        middleMan.id,
+        targetNode.id,
+        this.props.processDefinitionData,
+      )) {
         //TODO: consider doing inject check in actions.js?
         this.props.actions.injectNode(
           sourceNode,
@@ -229,87 +233,32 @@ class Graph extends React.Component {
     }
   }
 
-  time = (start, name) => {
-    const now = window.performance.now()
-    //uncomment to track performance...
-    //console.log("time: ", name, now - start)
-    return now
-  }
-
   drawGraph = (process, layout, processCounts, processDefinitionData, expandedGroups) => {
     this.redrawing = true
-    //leaving performance debug for now, as there is still room for improvement:
-    //handling processCounts without need of full redraw
-    const performance = window.performance
-    let t = performance.now()
 
-    const nodesWithGroups = NodeUtils.nodesFromProcess(process, expandedGroups)
-    const edgesWithGroups = NodeUtils.edgesFromProcess(process, expandedGroups)
-    t = this.time(t, "start")
-
-    const nodes = _.map(nodesWithGroups, (n) => {
-      return EspNode.makeElement(n, processCounts[n.id], processDefinitionData.nodesConfig || {})
-    })
-
-    t = this.time(t, "nodes")
-
-    const edges = _.map(edgesWithGroups, (e) => EspNode.makeLink(e))
-    t = this.time(t, "links")
-
-    const boundingRects = NodeUtils.getExpandedGroups(process, expandedGroups).map(expandedGroup => ({
-      group: expandedGroup,
-      rect: EspNode.boundingRect(nodes, expandedGroup, layout, NodeUtils.createGroupNode(nodesWithGroups, expandedGroup)),
-    }))
-
-    t = this.time(t, "bounding")
-
-    const cells = boundingRects.map(g => g.rect).concat(nodes.concat(edges))
-
-    const newCells = _.filter(cells, cell => !this.graph.getCell(cell.id))
-    const deletedCells = _.filter(this.graph.getCells(), oldCell => !_.find(cells, cell => cell.id === oldCell.id))
-    const changedCells = _.filter(cells, cell => {
-      const old = this.graph.getCell(cell.id)
-      //TODO: some different ways of comparing?
-      return old && JSON.stringify(old.get("definitionToCompare")) !== JSON.stringify(cell.get("definitionToCompare"))
-    })
-
-    t = this.time(t, "compute")
-
-    if (newCells.length + deletedCells.length + changedCells.length > 3) {
-      this.graph.resetCells(cells)
-    } else {
-      this.graph.removeCells(deletedCells)
-      this._updateChangedCells(changedCells)
-      this.graph.addCells(newCells)
-    }
-    t = this.time(t, "redraw")
-
-    this._layout(layout)
-    this.time(t, "layout")
-
-    _.forEach(boundingRects, rect => rect.rect.toBack())
+    console.time("drawGraph")
+    redrawGraph(
+      process,
+      expandedGroups,
+      processCounts,
+      processDefinitionData,
+      layout,
+      this.graph,
+      this._updateChangedCells.bind(this),
+      this.directedLayout.bind(this),
+    )
+    console.timeEnd("drawGraph")
 
     this.redrawing = false
   }
 
-  _layout(layout) {
-    if (_.isEmpty(layout)) {
-      this.directedLayout()
-    } else {
-      _.forEach(layout, el => {
-        const cell = this.graph.getCell(el.id)
-        if (cell && JSON.stringify(cell.get("position")) !== JSON.stringify(el.position)) cell.set("position", el.position)
-      })
-    }
-  }
-
   _updateChangedCells(changedCells) {
-    _.forEach(changedCells, cell => {
+    changedCells.forEach(cell => {
       const cellToRemove = this.graph.getCell(cell.id)
       const links = cellToRemove.isElement ? this.graph.getConnectedLinks(cellToRemove) : []
       cellToRemove.remove()
       this.graph.addCell(cell)
-      _.forEach(links, l => {
+      links.forEach(l => {
         l.remove()
         this.graph.addCell(l)
       })
@@ -317,8 +266,11 @@ class Graph extends React.Component {
   }
 
   _prepareContentForExport = () => {
-    const {options} = this.processGraphPaper
-    this._exportGraphOptions = cloneDeep(options)
+    const {options, defs} = this.processGraphPaper
+    this._exportGraphOptions = {
+      options: cloneDeep(options),
+      defs: defs.cloneNode(true),
+    }
   }
 
   highlightNodes = (data, nodeToDisplay, groupingState, selectionState) => {
@@ -368,14 +320,20 @@ class Graph extends React.Component {
     }
   }
 
-  changeLayoutIfNeeded = () => {
-    let newLayout = this.graph.getElements().filter(el => !el.get("backgroundObject")).map(el => {
-      const pos = el.get("position")
-      return {id: el.id, position: pos}
-    })
+  changeLayoutIfNeeded() {
+    const graph = this.graph
+    const {readonly, layout, actions} = this.props
 
-    if (!_.isEqual(this.props.layout, newLayout) && !this.props.readonly) {
-      this.props.actions && this.props.actions.layoutChanged(newLayout)
+    if (readonly) {
+      return
+    }
+
+    const newLayout = graph.getElements()
+      .filter(el => !el.get("backgroundObject"))
+      .map(el => ({id: el.id, position: el.get("position")}))
+
+    if (!isEqual(layout, newLayout)) {
+      actions?.layoutChanged(newLayout)
     }
   }
 
@@ -384,13 +342,14 @@ class Graph extends React.Component {
 
     const panAndZoom = svgPanZoom(svgElement, {
       viewportSelector: ".svg-pan-zoom_viewport",
-      fit: this.props.processToDisplay.nodes.length > 1,
+      fit: false,
+      contain: false,
       zoomScaleSensitivity: 0.4,
       controlIconsEnabled: false,
       panEnabled: false,
       dblClickZoomEnabled: false,
-      minZoom: 0.2,
-      maxZoom: 10,
+      minZoom: 0.05,
+      maxZoom: 5,
     })
 
     this.processGraphPaper.on("blank:pointerdown", (evt, x, y) => {
@@ -400,6 +359,8 @@ class Graph extends React.Component {
     this.processGraphPaper.on("cell:pointerup blank:pointerup", (cellView, event) => {
       panAndZoom.disablePan()
     })
+
+    panAndZoom.fit()
 
     this.fitSmallAndLargeGraphs(panAndZoom)
     return panAndZoom
@@ -529,17 +490,11 @@ class Graph extends React.Component {
     const pan = this.panAndZoom ? this.panAndZoom.getPan() : {x: 0, y: 0}
     const zoom = this.panAndZoom ? this.panAndZoom.getSizes().realZoom : 1
 
-    //TODO: is it REALLY ok?
-    const paddingLeft = cssVariables.svgGraphPaddingLeft
-    const paddingTop = cssVariables.svgGraphPaddingTop
-
-    const element = document.getElementById(this.props.divId)
-    const svg = element.getElementsByTagName("svg").item(0)
-    const graphPosition = svg.getBoundingClientRect()
+    const graphPosition = this.processGraphPaper.svg.getBoundingClientRect()
 
     return {
-      x: (pointerOffset.x - pan.x - graphPosition.left - paddingLeft) / zoom,
-      y: (pointerOffset.y - pan.y - graphPosition.top - paddingTop) / zoom,
+      x: Math.round((pointerOffset.x - pan.x - graphPosition.left) / zoom),
+      y: Math.round((pointerOffset.y - pan.y - graphPosition.top) / zoom),
     }
   }
 
@@ -576,65 +531,14 @@ class Graph extends React.Component {
   }
 }
 
-const spec = {
-  drop: (props, monitor, component) => {
-    const relOffset = component.computeRelOffset(monitor.getClientOffset())
-    component.addNode(monitor.getItem(), relOffset)
-
-  },
-}
-
-function mapState(state, props) {
+export function commonState(state) {
   return {
-    divId: "esp-graph",
-    parent: "working-area",
-    padding: 0,
-    readonly: state.graphReducer.businessView,
-    singleClickNodeDetailsEnabled: true,
-    nodeIdPrefixForSubprocessTests: "",
-    processToDisplay: state.graphReducer.processToDisplay,
-    fetchedProcessDetails: state.graphReducer.fetchedProcessDetails,
-    processCounts: state.graphReducer.processCounts || {},
-    nodeToDisplay: state.graphReducer.nodeToDisplay,
-    edgeToDisplay: state.graphReducer.edgeToDisplay,
-    groupingState: state.graphReducer.groupingState,
-    expandedGroups: state.ui.expandedGroups,
-    layout: state.graphReducer.layout,
-    showNodeDetailsModal: state.ui.showNodeDetailsModal,
-    ...commonState(state),
+    layout: [],
+    processCategory: getProcessCategory(state),
+    loggedUser: getLoggedUser(state),
+    processDefinitionData: getProcessDefinitionData(state),
+    selectionState: getSelectionState(state),
   }
 }
 
-function mapSubprocessState(state, props) {
-  return {
-    divId: "esp-graph-subprocess",
-    parent: subprocessParent,
-    padding: 30,
-    readonly: true,
-    singleClickNodeDetailsEnabled: false,
-    nodeIdPrefixForSubprocessTests: `${state.graphReducer.nodeToDisplay.id}-`, //TODO where should it be?
-    processToDisplay: props.processToDisplay,
-    processCounts: props.processCounts,
-    ...commonState(state),
-  }
-}
-
-function commonState(state) {
-  return {
-    processCategory: state.graphReducer.fetchedProcessDetails.processCategory,
-    loggedUser: state.settings.loggedUser,
-    processDefinitionData: state.settings.processDefinitionData || {},
-    selectionState: state.graphReducer.selectionState,
-  }
-}
-
-const subprocessParent = "modal-content"
-
-export let BareGraph = connect(mapSubprocessState, ActionsUtils.mapDispatchWithEspActions)(Graph)
-
-Graph = DropTarget("element", spec, (connect) => ({connectDropTarget: connect.dropTarget()}))(Graph)
-
-//withRef is here so that parent can access methods in graph
-Graph = connect(mapState, ActionsUtils.mapDispatchWithEspActions, null, {forwardRef: true})(Graph)
-
-export default Graph
+export const subprocessParent = "modal-content"

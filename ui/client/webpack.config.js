@@ -44,6 +44,8 @@ const fileLoader = {
 }
 
 module.exports = {
+  //JSDOM deps override
+  node: {fs: "empty", child_process: "empty", net: "empty", tls: "empty"},
   mode: NODE_ENV,
   optimization: {
     splitChunks: {
@@ -142,6 +144,15 @@ module.exports = {
   module: {
     rules: [
       {
+        test: require.resolve("jointjs"),
+        use: [
+          {
+            loader: "expose-loader",
+            options: "joint",
+          },
+        ],
+      },
+      {
         test: /\.html$/,
         loader: "html-loader?minimize=false",
       },
@@ -149,6 +160,19 @@ module.exports = {
         test: /\.[tj]sx?$/,
         use: ["babel-loader"],
         exclude: /node_modules/,
+      },
+      {
+        test: /\.worker\.(js|ts)$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: "comlink-loader",
+            options: {
+              singleton: true,
+            },
+          },
+          "babel-loader",
+        ],
       },
       {
         test: /\.(css|styl|less)?$/,
