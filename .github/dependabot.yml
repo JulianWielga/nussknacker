@@ -1,0 +1,10 @@
+
+ version: 2
+ updates:
+   - package-ecosystem: "npm" # See documentation for possible values
+     directory: "/ui/client" # Location of package manifests
+     schedule:
+       interval: "daily"
+     labels:
+       - "ui"
+       - "dependencies"
