@@ -1,8 +1,7 @@
 import _ from "lodash"
 import React from "react"
 import Dropzone from "react-dropzone"
-import {withTranslation} from "react-i18next"
-import {WithTranslation} from "react-i18next/src"
+import {WithTranslation, withTranslation} from "react-i18next"
 import {connect} from "react-redux"
 import {mapDispatchWithEspActions} from "../actions/ActionsUtils"
 import InlinedSvgs from "../assets/icons/InlinedSvgs"
@@ -26,7 +25,7 @@ export class ProcessAttachments extends React.Component<Props, State> {
     this.state = this.initState
   }
 
-  addAttachment = (files: File[]) => {
+  addAttachment = (files: File[]): number => {
     this.setState({pendingRequest: true})
     Promise.all(files.map((file)=> this.props.actions.addAttachment(this.props.processId, this.props.processVersionId, file))).then(() => {
       this.setState(this.initState)
