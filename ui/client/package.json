@@ -59,7 +59,7 @@
     "react": "^17.0.1",
     "react-ace": "~8.0.0",
     "react-addons-pure-render-mixin": "^15.6.3",
-    "react-beautiful-dnd": "^13.0.0",
+    "react-beautiful-dnd": "^13.1.0",
     "react-bootstrap": "~0.33.1",
     "react-cool-dimensions": "^1.2.0",
     "react-cron-generator": "^1.2.8",
