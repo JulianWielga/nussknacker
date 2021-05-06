@@ -28,7 +28,7 @@
     "coverage": "npx merge-cypress-jest-coverage"
   },
   "dependencies": {
-    "@babel/runtime": "^7.12.13",
+    "@babel/runtime": "^7.14.0",
     "@hot-loader/react-dom": "^17.0.1",
     "@juggle/resize-observer": "^3.2.0",
     "@loadable/component": "^5.14.1",
