@@ -25,7 +25,7 @@ export class ProcessAttachments extends React.Component<Props, State> {
     this.state = this.initState
   }
 
-  addAttachment = (files: File[]): number => {
+  addAttachment = (files: File[]) => {
     this.setState({pendingRequest: true})
     Promise.all(files.map((file)=> this.props.actions.addAttachment(this.props.processId, this.props.processVersionId, file))).then(() => {
       this.setState(this.initState)
