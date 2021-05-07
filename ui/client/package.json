@@ -212,7 +212,7 @@
     "process": "^0.11.10",
     "puppeteer": "^5.3.1",
     "raw-loader": "^4.0.2",
-    "react-refresh": "^0.9.0",
+    "react-refresh": "^0.10.0",
     "react-scrollbars-custom": "^4.0.25",
     "redux-mock-store": "^1.5.4",
     "start-server-and-test": "^1.12.1",
