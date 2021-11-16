@@ -222,7 +222,7 @@
     "moment-locales-webpack-plugin": "^1.2.0",
     "node-libs-browser": "^2.2.1",
     "path-browserify": "^1.0.1",
-    "postcss": "^8.3.6",
+    "postcss": "^8.3.11",
     "postcss-import": "^14.0.2",
     "postcss-loader": "^6.1.1",
     "postcss-move-props-to-bg-image-query": "^4.0.0",
