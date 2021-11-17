@@ -251,7 +251,7 @@
     "webpack": "5.57.1",
     "webpack-cli": "^4.8.0",
     "webpack-dev-server": "^4.3.0",
-    "webpack-remote-types-plugin": "0.2.6",
+    "webpack-remote-types-plugin": "0.2.7",
     "webpack-shell-plugin-next": "^2.2.2"
   },
   "@comment lint-staged": "We add svgo preprocessing as a pre-commit hook to avoid surprise that someone based on global style classes from svgo that won't be available anymore after preprocessing",
