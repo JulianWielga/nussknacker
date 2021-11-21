@@ -85,7 +85,7 @@
         "seed-color": "2.0.1",
         "style-loader": "^3.3.0",
         "svgo-loader": "3.0.0",
-        "ts-node": "^10.2.1",
+        "ts-node": "^10.4.0",
         "type-fest": "^2.3.4",
         "typescript": "^4.4.3",
         "typescript-plugin-css-modules": "3.4.0",
