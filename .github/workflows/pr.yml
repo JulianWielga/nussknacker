@@ -468,7 +468,6 @@ jobs:
         id: snapshots_diffs
         shell: bash
         run: |
-          ls ui/client/cypress/integration/__image_snapshots__/*.diff.png | wc -l
           echo ::set-output name=found::$(ls ui/client/cypress/integration/__image_snapshots__/*.diff.png | wc -l)
       - name: Test Report
         if: success() || failure()
@@ -487,7 +486,7 @@ jobs:
             ui/client/cypress/videos/
           if-no-files-found: ignore
       - name: FE tests e2e on build docker image with CYPRESS_SNAPSHOT_UPDATE
-        if: ${{ env.shouldBuildImage == 'true' && always() && steps.snapshots_diffs.found > 0 }}
+        if: ${{ always() && steps.snapshots_diffs.outputs.found > 0 && env.shouldBuildImage == 'true' }}
         env:
           CYPRESS_SNAPSHOT_UPDATE: "true"
           CYPRESS_BASE_URL: http://localhost:8080
@@ -497,7 +496,7 @@ jobs:
           cd ui/client
           npx start-server-and-test backend:docker 8080 test:e2e
       - name: FE tests e2e on pulled image with CYPRESS_SNAPSHOT_UPDATE
-        if: ${{ env.shouldBuildImage == 'false' && always() && steps.snapshots_diffs.found > 0 }}
+        if: ${{ always() && steps.snapshots_diffs.outputs.found > 0 && env.shouldBuildImage == 'false' }}
         env:
           CYPRESS_SNAPSHOT_UPDATE: "true"
         shell: bash
