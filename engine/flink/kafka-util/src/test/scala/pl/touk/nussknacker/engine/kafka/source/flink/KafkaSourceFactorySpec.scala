@@ -1,25 +1,25 @@
 package pl.touk.nussknacker.engine.kafka.source.flink
 
-import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.record.TimestampType
 import org.scalatest.{FunSuite, Matchers}
 import pl.touk.nussknacker.engine.api.context.ProcessCompilationError.NodeId
-import pl.touk.nussknacker.engine.api.context.transformation.{DefinedSingleParameter, TypedNodeDependencyValue}
+import pl.touk.nussknacker.engine.api.context.transformation.TypedNodeDependencyValue
+import pl.touk.nussknacker.engine.api.deployment.TestProcess.TestData
 import pl.touk.nussknacker.engine.api.process._
 import pl.touk.nussknacker.engine.api.typed.ReturningType
 import pl.touk.nussknacker.engine.api.typed.typing.Typed
-import pl.touk.nussknacker.engine.api.{MetaData, StreamMetaData}
+import pl.touk.nussknacker.engine.api.{MetaData, StreamMetaData, VariableConstants}
 import pl.touk.nussknacker.engine.flink.api.process.FlinkSourceTestSupport
-import KafkaSourceFactoryMixin._
-import pl.touk.nussknacker.engine.api.deployment.TestProcess.TestData
 import pl.touk.nussknacker.engine.kafka.serialization.schemas.{JsonSerializationSchema, SimpleSerializationSchema}
-import KafkaSourceFactory.KafkaSourceFactoryState
+import pl.touk.nussknacker.engine.kafka.source.KafkaContextInitializer
+import pl.touk.nussknacker.engine.kafka.source.KafkaSourceFactory.KafkaSourceFactoryState
+import pl.touk.nussknacker.engine.kafka.KafkaFactory.TopicParamName
+import pl.touk.nussknacker.engine.kafka.source.flink.KafkaSourceFactoryMixin._
 import pl.touk.nussknacker.engine.kafka.{ConsumerRecordUtils, KafkaSpec, serialization}
 import pl.touk.nussknacker.test.PatientScalaFutures
 
 import java.util.Optional
-
 
 class KafkaSourceFactorySpec extends FunSuite with Matchers with KafkaSpec with PatientScalaFutures with KafkaSourceFactoryMixin {
 
@@ -27,16 +27,16 @@ class KafkaSourceFactorySpec extends FunSuite with Matchers with KafkaSpec with 
 
   private lazy val nodeId: NodeId = NodeId("mock-node-id")
 
-  private def readLastMessage(sourceFactory: KafkaSourceFactory[Any, Any], topic: String, numberOfMessages: Int = 1): List[AnyRef] = {
+  private def readLastMessage(sourceFactory: FlinkKafkaSourceFactory[Any, Any], topic: String, numberOfMessages: Int = 1): List[AnyRef] = {
     val source = createSource(sourceFactory, topic)
     val bytes = source.generateTestData(numberOfMessages)
     source.testDataParser.parseTestData(TestData(bytes, numberOfMessages))
   }
 
-  private def createSource(sourceFactory: KafkaSourceFactory[Any, Any], topic: String): Source[AnyRef] with TestDataGenerator with FlinkSourceTestSupport[AnyRef] with ReturningType = {
-    val finalState = KafkaSourceFactoryState(new KafkaContextInitializer[Any, Any, DefinedSingleParameter](Typed[Any], Typed[Any]))
+  private def createSource(sourceFactory: FlinkKafkaSourceFactory[Any, Any], topic: String): Source[AnyRef] with TestDataGenerator with FlinkSourceTestSupport[AnyRef] with ReturningType = {
+    val finalState = KafkaSourceFactoryState(new KafkaContextInitializer[Any, Any](VariableConstants.InputVariableName, Typed[Any], Typed[Any]))
     val source = sourceFactory
-      .implementation(Map(KafkaSourceFactory.TopicParamName -> topic),
+      .implementation(Map(TopicParamName -> topic),
         List(TypedNodeDependencyValue(metaData), TypedNodeDependencyValue(nodeId)), Some(finalState))
       .asInstanceOf[Source[AnyRef] with TestDataGenerator with FlinkSourceTestSupport[AnyRef] with ReturningType]
     source

@@ -7,12 +7,6 @@ For detailed instructions how to migrate to the newest version please see [migra
 
 Nussknacker versions
 ====================
-
-1.2.0 (Not released yet)
-------------------------
-* [#2465](https://github.com/TouK/nussknacker/pull/2465) aggregate-sliding emitWhenEventLeft parameter changed default value from true to false
-* [#2474](https://github.com/TouK/nussknacker/pull/2474) Interpreter return type changed from `F[Either[List[InterpretationResult], EspExceptionInfo[_ <: Throwable]]]` to `F[List[Either[InterpretationResult, EspExceptionInfo[_ <: Throwable]]]]`. 
-  Hence, e.g. multiple branches in Graph can be evaluated, both positively and negatively at the same time.
      
 1.1.0 (Not released yet)
 ------------------------
@@ -27,11 +21,13 @@ Better handling of multiple schedules in batch periodic engine - fixed running o
 * [#2293](https://github.com/TouK/nussknacker/pull/2293) Enhancement: change `nodeCategoryMapping` configuration to `componentsGroupMapping` 
 * [#2169](https://github.com/TouK/nussknacker/pull/2169) Add Apache Ignite support to SQL Component by implementing
 a custom DB metadata provider that extends the standard JDBC Driver with missing features.
-* [#2301](https://github.com/TouK/nussknacker/pull/2301) [#2366](https://github.com/TouK/nussknacker/pull/2366) [#2409](https://github.com/TouK/nussknacker/pull/2409) Simplification of component API:
+* [#2301](https://github.com/TouK/nussknacker/pull/2301) [#2366](https://github.com/TouK/nussknacker/pull/2366) 
+  [#2409](https://github.com/TouK/nussknacker/pull/2409) [#2477](https://github.com/TouK/nussknacker/pull/2477) Simplification of component API:
   * `GenericNodeTransformation.initialParameters` was removed
   * `GenericNodeTransformation.fallbackFinalResult` introduced for not handle step, with default graceful strategy
   * `GenericNodeTransformation.contextTransformation` now handles `ParameterValidator` properly. Invalid value is handled as `FailedToDefineParameter`
 and `GenericNodeTransformation.implementation` is not invoked in this case
+  * `FinalResults.forValidation` utility method added to easily handle situation when you need to make some validation on context of variables (e.g. add variable checking if it already exists) 
 * [#2245](https://github.com/TouK/nussknacker/pull/2245) Periodic process scheduler retries failed scenario deployments based on PeriodicBatchConfig. 
   Breaking change in PeriodicProcessListener FailedEvent. Failed event is split into FailedOnDeployEvent and FailedOnRunEvent. 
   Please note that this mechanism only retries when failure on deployment occurs - failure recovery of running scenario should be handled by [restart strategy](https://docs.nussknacker.io/docs/installation_configuration_guide/ModelConfiguration#configuring-restart-strategies-flink-only)
@@ -40,7 +36,9 @@ and `GenericNodeTransformation.implementation` is not invoked in this case
 * [#2300](https://github.com/TouK/nussknacker/pull/2300) Enhancement: refactor and improvements at components group
 * [#2347](https://github.com/TouK/nussknacker/pull/2347) Support for implicit type conversions between `String` and various value classes (`Locale` etc.) 
 * [#2346](https://github.com/TouK/nussknacker/pull/2346) Remove `endResult` from `Sink` in graph. 
-* [#2331](https://github.com/TouK/nussknacker/pull/2331) Refactor `nussknacker-avro-flink-util` module. Move avro specific classes to new `nussknacker-avro-util` module. 
+* [#2331](https://github.com/TouK/nussknacker/pull/2331) Refactor `nussknacker-avro-flink-util` module. Move non-flink specific classes to new `nussknacker-avro-util` module. 
+* [#2348](https://github.com/TouK/nussknacker/pull/2348) [#2459](https://github.com/TouK/nussknacker/pull/2459) [#2486](https://github.com/TouK/nussknacker/pull/2486) [#2490](https://github.com/TouK/nussknacker/pull/2490)
+  Refactor `nussknacker-kafka-flink-util` module. Move non-flink specific classes to `nussknacker-kafka-util` module.
 * [#2344](https://github.com/TouK/nussknacker/pull/2344) Redesign of `#DATE` and `#DATE_FORMAT` utilities.
 * [#2305](https://github.com/TouK/nussknacker/pull/2305) Enhancement: change `processingTypeToDashboard` configuration to `scenarioTypeToDashboard`
 * [#2374](https://github.com/TouK/nussknacker/pull/2374) Auto-loaded `ComponentProvider`s
@@ -54,10 +52,12 @@ and `GenericNodeTransformation.implementation` is not invoked in this case
 * [#2361](https://github.com/TouK/nussknacker/pull/2361) Removed `security` dependency from `listener-api`. `LoggedUser` replaced with dedicated class in `listener-api`.
 * [#2367](https://github.com/TouK/nussknacker/pull/2367), [#2406](https://github.com/TouK/nussknacker/pull/2406) Simple kafka-based streaming scenario interpreter. 
   Stateless, with basic kafka sinks and sources. This is MVP, not intended for direct usage, more work with sources, sinks and invoking will come in next PRs                                                                     
-* [#2348](https://github.com/TouK/nussknacker/pull/2348) Introduce KafkaDeserializationSchema and KafkaSerializationSchema traits to decouple from flink dependency. move `KeyedValue` to `nussknacker-util`, move `SchemaRegistryProvider` to `utils/avro-util`
 * [#2377](https://github.com/TouK/nussknacker/pull/2377) Remove `clazz` from `SourceFactory`. It was used mainly for test sources.            
 * [#2397](https://github.com/TouK/nussknacker/pull/2397) Common `EngineRuntimeContext` lifecycle and `MetricsProvider`, cleaning unnecessary dependencies on Flink 
 * [#2486](https://github.com/TouK/nussknacker/pull/2486) Aggregates now producing context id in similar format as sources - will be visible in "Test case" during usage of tests mechanism
+* [#2465](https://github.com/TouK/nussknacker/pull/2465) aggregate-sliding emitWhenEventLeft parameter changed default value from true to false
+* [#2474](https://github.com/TouK/nussknacker/pull/2474) Interpreter return type changed from `F[Either[List[InterpretationResult], EspExceptionInfo[_ <: Throwable]]]` to `F[List[Either[InterpretationResult, EspExceptionInfo[_ <: Throwable]]]]`.
+  Hence, e.g. multiple branches in Graph can be evaluated, both positively and negatively at the same time.
 
 1.0.0
 ------------------------
@@ -104,7 +104,6 @@ Better handling Flink's job deploying - we report job initialization as a "DURIN
   * [#2081](https://github.com/TouK/nussknacker/pull/2081) Fix switch behaviour after changing condition
   * [#2071](https://github.com/TouK/nussknacker/pull/2071) Fix pasting cell on multiple edges
   * [#1978](https://github.com/TouK/nussknacker/pull/1978) Removed unclear node details panel
-  * 
   
 0.4.0
 ------------------------

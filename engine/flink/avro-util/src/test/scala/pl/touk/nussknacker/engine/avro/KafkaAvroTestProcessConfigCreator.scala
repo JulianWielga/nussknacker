@@ -12,7 +12,7 @@ import pl.touk.nussknacker.engine.avro.sink.flink.{KafkaAvroSinkFactory, KafkaAv
 import pl.touk.nussknacker.engine.avro.source.flink.{KafkaAvroSourceFactory, SpecificRecordKafkaAvroSourceFactory}
 import pl.touk.nussknacker.engine.flink.test.RecordingExceptionHandler
 import pl.touk.nussknacker.engine.kafka.KafkaConfig
-import pl.touk.nussknacker.engine.kafka.source.flink.InputMeta
+import pl.touk.nussknacker.engine.kafka.source.InputMeta
 import pl.touk.nussknacker.engine.process.helpers.SampleNodes.ExtractAndTransformTimestamp
 import pl.touk.nussknacker.engine.process.helpers.SinkForType
 import pl.touk.nussknacker.engine.util.process.EmptyProcessConfigCreator
@@ -58,7 +58,7 @@ class KafkaAvroTestProcessConfigCreator extends EmptyProcessConfigCreator {
     Map(
       "kafka-avro-raw" -> defaultCategory(new KafkaAvroSinkFactory(schemaRegistryProvider, processObjectDependencies)),
       "kafka-avro" -> defaultCategory(new KafkaAvroSinkFactoryWithEditor(schemaRegistryProvider, processObjectDependencies)),
-      "sinkForInputMeta" -> defaultCategory(SinkForInputMeta.toSourceFactory)
+      "sinkForInputMeta" -> defaultCategory(SinkForInputMeta.toSinkFactory)
     )
   }
 
