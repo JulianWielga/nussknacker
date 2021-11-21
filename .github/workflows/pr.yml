@@ -506,7 +506,7 @@ jobs:
       - name: Create Pull Request
         if: always()
         with:
-          token: ${{ secrets.pat }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           base: ${{ github.head_ref }}
         uses: peter-evans/create-pull-request@v3
 
