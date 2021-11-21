@@ -1,4 +1,4 @@
-describe("Components list", () => {
+xdescribe("Components list", () => {
   const seed = "components"
 
   before(() => {

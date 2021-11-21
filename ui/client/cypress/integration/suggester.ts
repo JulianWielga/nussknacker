@@ -1,4 +1,4 @@
-describe("Expression suggester", () => {
+xdescribe("Expression suggester", () => {
   const seed = "suggester"
 
   before(() => {
