@@ -467,7 +467,9 @@ jobs:
         if: failure()
         id: snapshots_diffs
         shell: bash
-        run: echo ::set-output name=found::$(ls ui/client/cypress/integration/__image_snapshots__/*.diff.png | wc -l)
+        run: |
+          ls ui/client/cypress/integration/__image_snapshots__/*.diff.png | wc -l
+          echo ::set-output name=found::$(ls ui/client/cypress/integration/__image_snapshots__/*.diff.png | wc -l)
       - name: Test Report
         if: success() || failure()
         uses: actions/upload-artifact@v2
