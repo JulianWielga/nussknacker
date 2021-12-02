@@ -98,5 +98,7 @@
     "lint-staged": {
         "**/*": "prettier --write --ignore-unknown",
         "*.{j|t}sx?": "eslint --cache --fix"
+    },
+    "dependencies": {
     }
 }

@@ -1,6 +1,8 @@
-import { Box, Chip, FormControl, InputLabel, MenuItem, FilledInput, OutlinedInput, Select, SelectChangeEvent } from "@mui/material";
+import { Box, Chip, FormControl, InputLabel, MenuItem, FilledInput, Badge, OutlinedInput, Select, SelectChangeEvent } from "@mui/material";
+import { MoreHoriz } from "@mui/icons-material";
 import { random } from "lodash";
 import React, { useMemo } from "react";
+import { Truncate } from "./cellRenderers/truncate";
 
 interface SelectFilterProps {
     label: string;
@@ -25,7 +27,11 @@ export function SelectFilter(props: SelectFilterProps): JSX.Element {
                 multiple
                 input={<FilledInput />}
                 renderValue={(selected) => (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 0.5, rowGap: 1 }}>
+                    <Box
+                        component={Truncate}
+                        renderTruncator={({ hiddenItemsCount }) => <>...</>}
+                        sx={{ display: "flex", columnGap: 0.5, rowGap: 1 }}
+                    >
                         {selected.map((v) => (
                             <Chip
                                 key={v}

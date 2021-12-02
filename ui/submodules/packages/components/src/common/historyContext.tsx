@@ -1,4 +1,5 @@
 import { Action } from "history";
+import { isEqual } from "lodash";
 import React, { PropsWithChildren, useContext, useEffect, useState } from "react";
 import { Location, useLocation, useNavigationType } from "react-router-dom";
 
@@ -30,4 +31,11 @@ export function useHistory(): Location[] {
         throw "HistoryContext not initialized!";
     }
     return context;
+}
+
+export function useBackHref(fallback: Partial<Location> = { pathname: "/" }): Location {
+    const history = useHistory();
+    const location = useLocation();
+    const back = history[history.length - 2] || history[0];
+    return isEqual(location, back) ? { ...location, ...fallback } : back;
 }
