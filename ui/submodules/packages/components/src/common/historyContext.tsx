@@ -14,6 +14,13 @@ export function HistoryProvider({ children }: PropsWithChildren<unknown>): JSX.E
             case Action.Push:
                 storeLocations((l) => [...l, location]);
                 break;
+            case Action.Pop:
+                storeLocations((l = []) => {
+                    l.pop();
+                    l.pop();
+                    return [...l, location];
+                });
+                break;
             case Action.Replace:
                 storeLocations((l) => {
                     l.pop();
@@ -37,5 +44,5 @@ export function useBackHref(fallback: Partial<Location> = { pathname: "/" }): Lo
     const history = useHistory();
     const location = useLocation();
     const back = history[history.length - 2] || history[0];
-    return isEqual(location, back) ? { ...location, ...fallback } : back;
+    return isEqual(location, back) ? { ...location, search: null, hash: null, ...fallback } : back;
 }

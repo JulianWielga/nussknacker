@@ -1,7 +1,9 @@
 import { Box, Paper, useMediaQuery, useTheme } from "@mui/material";
 import { DataGrid, GridActionsColDef, GridColDef } from "@mui/x-data-grid";
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { CustomPagination } from "./customPagination";
+import { FilterRules } from "./filters/filterRules";
+import { useFilterContext } from "./filters/filtersContext";
 
 type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 type ColumnDef<R> = GridColDef & {
@@ -17,14 +19,25 @@ export interface TableViewData<T> {
 
 interface TableViewProps<T> extends TableViewData<T> {
     columns: Columns<T[]>;
-    dataFilter?: (row: T) => boolean;
+    filterRules?: FilterRules<T>;
 }
 
 export function TableWrapper<T>(props: TableViewProps<T>): JSX.Element {
-    const { data = [], dataFilter, isLoading, ...passProps } = props;
-    const filtered = useMemo(() => dataFilter ? data.filter(dataFilter) : data, [data, dataFilter]);
+    const { data = [], filterRules, isLoading, ...passProps } = props;
     const theme = useTheme();
     const md = useMediaQuery(theme.breakpoints.up("md"));
+
+    const { model } = useFilterContext();
+    const dataFilter = useCallback(
+        (row) =>
+            !filterRules ||
+            Object.entries(model).every(([id, value]) => {
+                const check = filterRules[id];
+                return value && check ? check(row, value) : true;
+            }),
+        [model, passProps.columns],
+    );
+    const filtered = useMemo(() => (dataFilter ? data.filter(dataFilter) : data), [data, dataFilter]);
 
     return (
         <Box

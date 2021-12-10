@@ -1,20 +1,12 @@
-import { DateTime } from "luxon";
 import type { ComponentUsageType } from "nussknackerUi/HttpService";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { CustomCell } from "./cellRenderers/categoriesCell";
 import { ScenarioCell } from "./cellRenderers/scenarioCell";
-import { Column, Columns, TableViewData, TableWrapper } from "./tableWrapper";
+import { Columns, TableViewData, TableWrapper } from "./tableWrapper";
+import { FilterRules } from "./filters/filterRules";
 
-const dateTimeColumn = <R extends any>(def: Column<R>): Column<R> => ({
-    ...def,
-    type: "dateTime",
-    flex: 1,
-    valueGetter: ({ value }) => value && new Date(value),
-    valueFormatter: ({ value: date }) => DateTime.fromJSDate(date as Date).toFormat("yyyy-MM-dd HH:mm:ss"),
-});
-
-export function UsagesTable(props: TableViewData<ComponentUsageType> & { filter?: string }): JSX.Element {
+export function UsagesTable(props: TableViewData<ComponentUsageType>): JSX.Element {
     const { data = [], isLoading } = props;
     const { t } = useTranslation();
 
@@ -31,14 +23,18 @@ export function UsagesTable(props: TableViewData<ComponentUsageType> & { filter?
                 field: "processCategory",
                 headerName: t("table.usages.title.PROCESS_CATEGORY", "Process category"),
             },
-            dateTimeColumn({
+            {
                 field: "modificationDate",
                 headerName: t("table.usages.title.MODIFICATION_DATE", "Modification date"),
-            }),
-            dateTimeColumn({
+                type: "dateTime",
+                flex: 1,
+            },
+            {
                 field: "createdAt",
                 headerName: t("table.usages.title.CREATED_AT", "Created at"),
-            }),
+                type: "dateTime",
+                flex: 1,
+            },
             {
                 field: "createdBy",
                 headerName: t("table.usages.title.CREATED_BY", "Created by"),
@@ -55,20 +51,17 @@ export function UsagesTable(props: TableViewData<ComponentUsageType> & { filter?
         [t],
     );
 
-    return (
-        <TableWrapper<ComponentUsageType>
-            columns={columns}
-            data={data}
-            isLoading={isLoading}
-            dataFilter={
-                props.filter
-                    ? (row) =>
-                          Object.values(row)
-                              .filter(Boolean)
-                              .map((v) => v.toString().toLowerCase())
-                              .some((value) => value.includes(props.filter.toLowerCase()))
-                    : null
-            }
-        />
+    const filterRules = useMemo<FilterRules<ComponentUsageType>>(
+        () => ({
+            TEXT: (row, filter) =>
+                !filter.length ||
+                columns
+                    .map(({ field }) => row[field]?.toString().toLowerCase())
+                    .filter(Boolean)
+                    .some((value) => value.includes(filter.toLowerCase())),
+        }),
+        [columns],
     );
+
+    return <TableWrapper<ComponentUsageType> columns={columns} data={data} isLoading={isLoading} filterRules={filterRules} />;
 }

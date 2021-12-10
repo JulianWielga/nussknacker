@@ -31,8 +31,8 @@ export function Filters(props: PropsWithChildren<FiltersProps>): JSX.Element {
                         label={t("table.filter.NAME", "Name")}
                         variant="filled"
                         fullWidth
-                        value={getFilter("NAME") || ""}
-                        onChange={setFilter("NAME")}
+                        value={getFilter("TEXT") || ""}
+                        onChange={setFilter("TEXT")}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} lg={3} xl={3}>

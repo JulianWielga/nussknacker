@@ -3,13 +3,21 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Breadcrumbs, Grid, Link, Skeleton, Typography } from "@mui/material";
 import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import { Link as RouterLink, Navigate, useParams, useSearchParams } from "react-router-dom";
+import React from "react";
+import { Link as RouterLink, Navigate, useParams } from "react-router-dom";
 import { useBackHref } from "../common";
 import { UsagesTable } from "./usagesTable";
 import { useComponentQuery, useComponentUsagesQuery } from "./useComponentsQuery";
-import { useDebouncedValue } from "rooks";
-import { deserializeFromQuery, serializeToQuery } from "./filters/filtersContext";
+import { FiltersContextProvider, useFilterContext } from "./filters/filtersContext";
+
+function Filters() {
+    const { getFilter, setFilter } = useFilterContext();
+    return (
+        <Grid item xs={12} sm={4}>
+            <CustomizedInputBase value={getFilter("TEXT") || ""} onChange={setFilter("TEXT")} />
+        </Grid>
+    );
+}
 
 export function ComponentView(): JSX.Element {
     const { componentId } = useParams<"componentId">();
@@ -17,19 +25,8 @@ export function ComponentView(): JSX.Element {
     const { data: component, isLoading: componentLoading } = useComponentQuery(componentId);
     const back = useBackHref();
 
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [filter, setFilter] = useState(deserializeFromQuery<{ FILTER?: string }>(searchParams));
-    const [debouncedFilter] = useDebouncedValue(filter, 250, { initializeWithNull: true });
-    useEffect(() => {
-        setFilter(deserializeFromQuery(searchParams));
-    }, [searchParams]);
-
-    useLayoutEffect(() => {
-        debouncedFilter && setSearchParams(serializeToQuery(debouncedFilter), { replace: true });
-    }, [debouncedFilter, setSearchParams]);
-
     return (
-        <>
+        <FiltersContextProvider>
             <Grid container direction="row" justifyContent="space-between" alignItems="flex-end">
                 <Grid item>
                     <Breadcrumbs
@@ -56,12 +53,10 @@ export function ComponentView(): JSX.Element {
                         <Typography color="inherit">usages</Typography>
                     </Breadcrumbs>
                 </Grid>
-                <Grid item xs={12} sm={4}>
-                    <CustomizedInputBase value={filter?.FILTER} onChange={(FILTER) => setFilter({ FILTER })} />
-                </Grid>
+                <Filters />
             </Grid>
-            <UsagesTable data={data} isLoading={isLoading} filter={filter?.FILTER} />
-        </>
+            <UsagesTable data={data} isLoading={isLoading} />
+        </FiltersContextProvider>
     );
 }
 

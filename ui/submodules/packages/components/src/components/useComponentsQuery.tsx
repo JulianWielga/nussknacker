@@ -3,6 +3,7 @@ import { useContext, useMemo } from "react";
 import { useQuery } from "react-query";
 import { UseQueryResult } from "react-query/types/react/types";
 import { NkApiContext, NkIconsContext } from "../settings/nkApiProvider";
+import { DateTime } from "luxon";
 
 export function useComponentsQuery(): UseQueryResult<ComponentType[]> {
     const api = useContext(NkApiContext);
@@ -27,7 +28,11 @@ export function useComponentUsagesQuery(componentId: string): UseQueryResult<Com
         queryKey: ["usages", componentId],
         queryFn: async () => {
             const { data } = await api.fetchComponentUsages(componentId);
-            return data;
+            return data.map(({ createdAt, modificationDate, ...row }) => ({
+                ...row,
+                createdAt: createdAt && DateTime.fromISO(createdAt).toFormat("yyyy-MM-dd HH:mm:ss"),
+                modificationDate: modificationDate && DateTime.fromISO(modificationDate).toFormat("yyyy-MM-dd HH:mm:ss"),
+            }));
         },
         enabled: !!api,
         refetchInterval: 60000,
