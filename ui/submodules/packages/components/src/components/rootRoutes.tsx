@@ -4,6 +4,9 @@ import { ComponentView } from "./usages/componentView";
 import { ListWithFilters } from "./listWithFilters";
 import { UnavailableViewPlaceholder } from "./unavailableViewPlaceholder";
 import { View } from "./view";
+import { Prototype } from "./prototype";
+
+const TestEl = () => <div style={{ display: "none" }}></div>;
 
 export function RootRoutes({ inTab }: { inTab?: boolean }): JSX.Element {
     return (
@@ -14,8 +17,10 @@ export function RootRoutes({ inTab }: { inTab?: boolean }): JSX.Element {
                     <Route index element={<Navigate to="/invalid" replace />} />
                     <Route path=":componentId" element={<ComponentView />} />
                 </Route>
+                <Route path="prototype" element={<Prototype />} />
                 <Route path="*" element={<UnavailableViewPlaceholder />} />
             </Routes>
+            <TestEl />
         </View>
     );
 }

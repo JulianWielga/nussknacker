@@ -58,7 +58,7 @@ export const useDefaultTheme = (parent = {}): Theme => {
                         border: 0,
                     },
                     row: {
-                        ":nth-of-type(even):not(:hover)": {
+                        "&.zebra:nth-of-type(even):not(:hover)": {
                             backgroundColor: alpha(root.palette.action.hover, root.palette.action.hoverOpacity * 1.5),
                         },
                     },

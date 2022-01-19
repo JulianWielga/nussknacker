@@ -24,7 +24,7 @@ export function UsagesTable(props: TableViewData<ComponentUsageType>): JSX.Eleme
     const { t } = useTranslation();
 
     const columns = useMemo(
-        (): Columns<ComponentUsageType[]> => [
+        (): Columns<ComponentUsageType> => [
             {
                 field: "name",
                 cellClassName: "noPadding stretch",

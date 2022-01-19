@@ -18,7 +18,7 @@ export function ComponentTable(props: TableViewData<ComponentType>): JSX.Element
     const { t } = useTranslation();
 
     const columns = useMemo(
-        (): Columns<ComponentType[]> => [
+        (): Columns<ComponentType> => [
             {
                 field: "name",
                 minWidth: 200,

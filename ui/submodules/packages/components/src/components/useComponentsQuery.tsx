@@ -4,6 +4,7 @@ import { useQuery } from "react-query";
 import { UseQueryResult } from "react-query/types/react/types";
 import { NkApiContext, NkIconsContext } from "../settings/nkApiProvider";
 import { DateTime } from "luxon";
+import { ProcessType } from "nussknackerUi/components/Process/types";
 
 export function useComponentsQuery(): UseQueryResult<ComponentType[]> {
     const api = useContext(NkApiContext);
@@ -37,6 +38,19 @@ export function useComponentUsagesQuery(componentId: string): UseQueryResult<Com
                 createdAt: createdAt && DateTime.fromISO(createdAt).toFormat("yyyy-MM-dd HH:mm:ss"),
                 modificationDate: modificationDate && DateTime.fromISO(modificationDate).toFormat("yyyy-MM-dd HH:mm:ss"),
             }));
+        },
+        enabled: !!api,
+        refetchInterval: 60000,
+    });
+}
+
+export function useScenariosQuery(): UseQueryResult<ProcessType[]> {
+    const api = useContext(NkApiContext);
+    return useQuery({
+        queryKey: ["scenarios"],
+        queryFn: async () => {
+            const { data } = await api.fetchProcesses();
+            return data;
         },
         enabled: !!api,
         refetchInterval: 60000,
