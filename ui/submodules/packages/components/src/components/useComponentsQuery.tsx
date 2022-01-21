@@ -49,8 +49,8 @@ export function useScenariosQuery(): UseQueryResult<ProcessType[]> {
     return useQuery({
         queryKey: ["scenarios"],
         queryFn: async () => {
-            const { data } = await api.fetchProcesses();
-            return data;
+            const results = await Promise.all([api.fetchProcesses(), api.fetchProcesses({ isArchived: true })]);
+            return results.flatMap(({ data }) => data);
         },
         enabled: !!api,
         refetchInterval: 60000,

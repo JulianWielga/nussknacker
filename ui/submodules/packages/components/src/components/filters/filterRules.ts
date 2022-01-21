@@ -18,6 +18,7 @@ export interface FiltersModel {
     USED_ONLY?: boolean;
     TEXT?: string;
     SHOW_ARCHIVED?: boolean;
+    CREATED_BY?: string[];
 }
 
 export const FILTER_RULES: FilterRules<ComponentType> = {

@@ -90,8 +90,8 @@ export const useDefaultTheme = (parent = {}): Theme => {
                     root: {
                         borderRadius: "5px",
                         overflow: "hidden",
-                        maxWidth: "15vw",
-                        lineHeight: "2em"
+                        maxWidth: "50vw",
+                        lineHeight: "2em",
                     },
                 },
             },

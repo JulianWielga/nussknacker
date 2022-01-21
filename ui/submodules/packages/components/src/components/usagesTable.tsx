@@ -39,6 +39,7 @@ export function UsagesTable(props: TableViewData<ComponentUsageType>): JSX.Eleme
                 headerName: t("table.usages.title.IS_FRAGMENT", "Fragment"),
                 valueGetter: ({ row }) => row.isSubprocess,
                 type: "boolean",
+                sortingOrder: ["desc", "asc", null],
             },
             {
                 field: "processCategory",
@@ -53,6 +54,7 @@ export function UsagesTable(props: TableViewData<ComponentUsageType>): JSX.Eleme
                 flex: 2,
                 renderCell: Highlighted,
                 hide: true,
+                sortingOrder: ["desc", "asc", null],
             },
             {
                 field: "createdBy",
@@ -66,6 +68,7 @@ export function UsagesTable(props: TableViewData<ComponentUsageType>): JSX.Eleme
                 type: "dateTime",
                 flex: 2,
                 renderCell: Highlighted,
+                sortingOrder: ["desc", "asc", null],
             },
             {
                 field: "isDeployed",
@@ -81,6 +84,7 @@ export function UsagesTable(props: TableViewData<ComponentUsageType>): JSX.Eleme
                     }
                     return <RocketLaunch color="warning" />;
                 },
+                sortingOrder: ["desc", "asc", null],
             },
             {
                 field: "nodesId",
@@ -90,6 +94,7 @@ export function UsagesTable(props: TableViewData<ComponentUsageType>): JSX.Eleme
                 sortComparator: (v1: string[], v2: string[]) => v1.length - v2.length,
                 renderCell: NodesCell,
                 hideable: false,
+                sortingOrder: ["desc", "asc", null],
             },
         ],
         [t],
