@@ -4,7 +4,7 @@ import { ComponentView } from "./usages/componentView";
 import { ListWithFilters } from "./listWithFilters";
 import { UnavailableViewPlaceholder } from "./unavailableViewPlaceholder";
 import { View } from "./view";
-import { Prototype } from "./prototype";
+import { Prototype } from "./prototype/prototype";
 
 const TestEl = () => <div style={{ display: "none" }}></div>;
 

@@ -16,7 +16,7 @@ const getDataUrl = memoize(async (url: string) => {
   return {dataurl: svgTowDataURL(svgStr), id: util.uniqueId("img")}
 })
 
-function _debugInWindow(svg: string | SVGElement) {
+function _debugInWindow(svg: string | Element) {
   const svgString = typeof svg === "string" ? svg : toXml(svg)
   window.open(null).document.write(svgString)
 }
@@ -63,12 +63,36 @@ function hasDisplay(el: Element) {
   return window.getComputedStyle(el).display !== "none"
 }
 
+const selectors = [
+  "svg > g [style*='display']",
+  "svg > g [class]",
+  "[noexport]",
+]
+
 const removeHiddenNodes = (root: SVGElement) => Array
   // TODO: find better way
-  .from(root.querySelectorAll<SVGGraphicsElement>("svg > g [style*='display'], svg > g [class], [noexport]"))
+  .from(root.querySelectorAll<SVGGraphicsElement>(selectors.join(",")))
   .filter(el => !hasSize(el) || !hasDisplay(el))
   .filter((el, i, all) => !all.includes(el.ownerSVGElement))
   .forEach(el => el.remove())
+
+const backgrounds = (root: SVGElement) => {
+  Array
+    .from(root.querySelectorAll<SVGGraphicsElement>("svg > g path[fill]"))
+    .forEach(el => {
+      // el.previousElementSibling.remove()
+      const val = el.getAttribute("fill")
+      el.nextElementSibling.setAttribute("fill", val)
+      el.nextElementSibling.setAttribute("stroke", val)
+    })
+  const divElement = document.createElement("div")
+  const imgElement = document.createElement("img")
+  divElement.setAttribute("style",`padding: 20px; background: gray;`)
+  imgElement.setAttribute("style",`width: 200px;`)
+  imgElement.setAttribute("src",svgTowDataURL(toXml(root)))
+  divElement.appendChild(imgElement)
+  return divElement
+}
 
 function createPlaceholder(parent = document.body) {
   const el = document.createElement("div")
@@ -97,6 +121,8 @@ function createPaper(placeholder: HTMLDivElement, maxSize: number, {options, def
 
 function addStyles(svg: SVGElement, height: number, width: number) {
   svg.prepend(createStyle())
+  svg.setAttribute("viewbox", `0 0 ${width.toString()} ${height.toString()}`)
+  svg.setAttribute("preserveAspectRatio", `xMidYMid meet`)
   svg.setAttribute("height", height.toString())
   svg.setAttribute("width", width.toString())
   svg.setAttribute("class", "graph-export")
@@ -111,6 +137,8 @@ export async function prepareSvg(options: Pick<dia.Paper, "options" | "defs">, a
   await embedImages(svg)
 
   placeholder.remove()
-  return toXml(svg)
+  _debugInWindow(backgrounds(svg))
+
+  // return toXml(svg)
 }
 
