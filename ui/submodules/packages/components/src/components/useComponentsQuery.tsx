@@ -5,6 +5,7 @@ import { UseQueryResult } from "react-query/types/react/types";
 import { NkApiContext, NkIconsContext } from "../settings/nkApiProvider";
 import { DateTime } from "luxon";
 import { ProcessType } from "nussknackerUi/components/Process/types";
+import { StatusesType } from "nussknackerUi/HttpService";
 
 export function useComponentsQuery(): UseQueryResult<ComponentType[]> {
     const api = useContext(NkApiContext);
@@ -54,6 +55,19 @@ export function useScenariosQuery(): UseQueryResult<ProcessType[]> {
         },
         enabled: !!api,
         refetchInterval: 60000,
+    });
+}
+
+export function useScenariosStatusesQuery(): UseQueryResult<StatusesType> {
+    const api = useContext(NkApiContext);
+    return useQuery({
+        queryKey: ["scenariosStatuses"],
+        queryFn: async () => {
+            const { data } = await api.fetchProcessesStates();
+            return data;
+        },
+        enabled: !!api,
+        refetchInterval: 15000,
     });
 }
 

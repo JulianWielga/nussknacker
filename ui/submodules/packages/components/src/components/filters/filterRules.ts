@@ -18,7 +18,10 @@ export interface FiltersModel {
     USED_ONLY?: boolean;
     TEXT?: string;
     SHOW_ARCHIVED?: boolean;
+    SHOW_FRAGMENTS?: boolean;
+    HIDE_SCENARIOS?: boolean;
     CREATED_BY?: string[];
+    STATUS?: string[];
 }
 
 export const FILTER_RULES: FilterRules<ComponentType> = {

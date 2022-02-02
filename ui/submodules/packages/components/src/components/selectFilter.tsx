@@ -1,13 +1,53 @@
-import { Box, Chip, FilledInput, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import {
+    Box,
+    Checkbox,
+    Chip,
+    FilledInput,
+    FormControl,
+    FormControlLabel,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
+    Stack,
+    Typography,
+} from "@mui/material";
 import { random } from "lodash";
 import React, { useMemo } from "react";
 import { Truncate } from "./cellRenderers/truncate";
+import ClearIcon from "@mui/icons-material/Clear";
 
 interface SelectFilterProps {
     label: string;
     options: string[];
     value: string[];
     onChange: (value: string[]) => void;
+}
+
+export function SelectFilter2(props: SelectFilterProps): JSX.Element {
+    const { options, value, onChange, label } = props;
+    return (
+        <Stack direction="column">
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography variant="subtitle2">{label}</Typography>
+                <IconButton
+                    aria-label="clear"
+                    onClick={() => onChange(null)}
+                    edge="end"
+                    size="small"
+                    sx={{ visibility: value.length ? "visible" : "hidden" }}
+                >
+                    <ClearIcon />
+                </IconButton>
+            </Stack>
+            {options?.map((option) => {
+                const isSelected = value.includes(option);
+                const onClick = () => onChange(isSelected ? value.filter((v) => v !== option) : [...value, option]);
+                return <FormControlLabel key={option} control={<Checkbox checked={isSelected} onChange={onClick} />} label={option} />;
+            })}
+        </Stack>
+    );
 }
 
 export function SelectFilter(props: SelectFilterProps): JSX.Element {

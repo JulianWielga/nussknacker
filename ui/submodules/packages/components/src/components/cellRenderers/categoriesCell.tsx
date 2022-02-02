@@ -9,8 +9,9 @@ export function CategoryChip({ value }: { value: string }): JSX.Element {
     const filterValue = useMemo(() => getFilter("CATEGORY", true), [getFilter]);
     const isSelected = useMemo(() => filterValue.includes(value), [filterValue, value]);
 
-    const onClick = useCallback(() => {
-        setFilter("CATEGORY", isSelected ? filterValue.filter((value) => value !== value) : [...filterValue, value]);
+    const onClick = useCallback((e) => {
+        setFilter("CATEGORY", isSelected ? filterValue.filter((v) => v !== value) : [...filterValue, value]);
+        e.stopPropagation();
     }, [filterValue, isSelected, value, setFilter]);
 
     return <Chip tabIndex={0} label={value} size="small" color={isSelected ? "primary" : "default"} onClick={onClick} />;
