@@ -1,16 +1,15 @@
 import React, { useMemo, useState } from "react";
 import { TableViewData } from "../tableWrapper";
 import { FilterRules } from "../filters/filterRules";
-import { useScenariosQuery, useScenariosStatusesQuery } from "../useComponentsQuery";
+import { useScenariosQuery } from "../useComponentsQuery";
 import { FiltersContextProvider } from "../filters/filtersContext";
 import { ProcessType } from "nussknackerUi/components/Process/types";
 import { ItemsList } from "./itemsList";
 import { Filters2, QFilter } from "../usages/filters";
-import { Box, Button, Link, Paper, Stack, styled } from "@mui/material";
+import { Box, Button, Paper, Stack, styled } from "@mui/material";
 import { flatten, uniq } from "lodash";
 
 import Chance from "chance";
-import { useScrollParent } from "./useScrollParent";
 
 const chance = new Chance();
 const names = Array(50)
@@ -118,8 +117,9 @@ function TableView(props: TableViewData<RowType>): JSX.Element {
                     .filter(Boolean)
                     .some((value) => value.includes(filter.toString().toLowerCase())),
             SHOW_ARCHIVED: (row, filter) => filter || !row.isArchived,
-            SHOW_FRAGMENTS: (row, filter) => filter || !row.isSubprocess,
-            HIDE_SCENARIOS: (row, filter) => !filter || row.isSubprocess,
+            HIDE_ACTIVE: (row, filter) => filter ? row.isArchived : true,
+            HIDE_FRAGMENTS: (row, filter) => filter ? !row.isSubprocess : true,
+            HIDE_SCENARIOS: (row, filter) => filter ? row.isSubprocess : true,
             CATEGORY: (row, value) => !value?.length || [].concat(value).some((f) => row["processCategory"] === f),
             CREATED_BY: (row, value) => !value?.length || [].concat(value).some((f) => row["createdBy"]?.includes(f)),
         }),

@@ -18,7 +18,8 @@ export interface FiltersModel {
     USED_ONLY?: boolean;
     TEXT?: string;
     SHOW_ARCHIVED?: boolean;
-    SHOW_FRAGMENTS?: boolean;
+    HIDE_ACTIVE?: boolean;
+    HIDE_FRAGMENTS?: boolean;
     HIDE_SCENARIOS?: boolean;
     CREATED_BY?: string[];
     STATUS?: string[];

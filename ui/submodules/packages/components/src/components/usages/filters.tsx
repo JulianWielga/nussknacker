@@ -1,5 +1,5 @@
 import { useFilterContext } from "../filters/filtersContext";
-import React, { ChangeEvent, PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ChangeEvent, PropsWithChildren, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
@@ -75,10 +75,7 @@ export function QFilter({ children, ...props }: PropsWithChildren<unknown>): JSX
     );
 }
 
-export function Filters2({ values = {}, visible }: {
-    values: Record<string, string[]>;
-    visible?: boolean;
-}): JSX.Element {
+export function Filters2({ values = {}, visible }: { values: Record<string, string[]>; visible?: boolean }): JSX.Element {
     const { t } = useTranslation();
 
     const { getFilter, setFilter } = useFilterContext();
@@ -88,9 +85,15 @@ export function Filters2({ values = {}, visible }: {
         },
         [setFilter],
     );
+    const setActiveFilter = useCallback(
+        (e) => {
+            setFilter("HIDE_ACTIVE", !e.target.checked);
+        },
+        [setFilter],
+    );
     const setFragmentFilter = useCallback(
         (e) => {
-            setFilter("SHOW_FRAGMENTS", e.target.checked);
+            setFilter("HIDE_FRAGMENTS", !e.target.checked);
         },
         [setFilter],
     );
@@ -100,34 +103,44 @@ export function Filters2({ values = {}, visible }: {
         },
         [setFilter],
     );
-    const [getScrollParent, bindElements] = useScrollParent();
 
+    const ref2 = useRef<HTMLDivElement>();
+    const { ref, scrollParent } = useScrollParent<HTMLDivElement>();
 
     const [isScrolled, setIsScrolled] = useState(false);
-    const scrollParent = getScrollParent();
-    useEffect(() => {
+    useLayoutEffect(() => {
         const listener = ({ target }) => {
             requestAnimationFrame(() => {
-                setIsScrolled(target?.scrollTop > 0);
+                const value = target?.scrollTop > 80;
+                if (!value) {
+                    ref2.current?.scrollTo(0, 0);
+                }
+                setIsScrolled(value);
             });
         };
+        console.log(scrollParent);
         scrollParent?.addEventListener("scroll", listener);
         return () => scrollParent?.removeEventListener("scroll", listener);
     }, [scrollParent]);
     const clientHeight = scrollParent?.clientHeight;
 
     return (
-        <>
-            <Fade in={visible} ref={bindElements}>
+        <div ref={ref}>
+            <Fade in={visible}>
                 <Stack
+                    ref={ref2}
                     sx={{
-                        overflow: "auto",
+                        overflowY: isScrolled && clientHeight > 0 ? "auto" : "visible",
                         maxHeight:
-                            isScrolled && clientHeight > 0 && ((theme) => {
-                                return `calc(${clientHeight}px - ${theme.spacing(4)})`;
-                            }),
+                            isScrolled && clientHeight > 0 ? (theme) => `calc(${clientHeight}px - ${theme.spacing(2)})` : clientHeight,
                     }}
-                    component={"form"} noValidate autoComplete="off" spacing={2} p={2} direction="column">
+                    component={"form"}
+                    noValidate
+                    autoComplete="off"
+                    spacing={2}
+                    p={2}
+                    direction="column"
+                >
                     <SelectFilter2
                         label={t("table.filter.CATEGORY", "Category")}
                         options={values["processCategory"]}
@@ -145,23 +158,24 @@ export function Filters2({ values = {}, visible }: {
                             <Typography variant="subtitle2">{t("table.filter.other", "Other")}</Typography>
                         </Stack>
                         <FormControlLabel
-                            control={<Checkbox checked={getFilter("HIDE_SCENARIOS") !== true}
-                                               onChange={setScenariosFilter} />}
-                            label={`${t("table.filter.HIDE_SCENARIOS", "Show scenarios")}`}
+                            control={<Checkbox checked={getFilter("HIDE_SCENARIOS") !== true} onChange={setScenariosFilter} />}
+                            label={`${t("table.filter.SHOW_SCENARIOS", "Show scenarios")}`}
                         />
                         <FormControlLabel
-                            control={<Checkbox checked={getFilter("SHOW_FRAGMENTS") === true}
-                                               onChange={setFragmentFilter} />}
-                            label={`${t("table.filter.IS_FRAGMENT", "Show fragments")}`}
+                            control={<Checkbox checked={getFilter("HIDE_FRAGMENTS") !== true} onChange={setFragmentFilter} />}
+                            label={`${t("table.filter.SHOW_FRAGMENTS", "Show fragments")}`}
                         />
                         <FormControlLabel
-                            control={<Checkbox checked={getFilter("SHOW_ARCHIVED") === true}
-                                               onChange={setArchivedFilter} />}
+                            control={<Checkbox checked={getFilter("HIDE_ACTIVE") !== true} onChange={setActiveFilter} />}
+                            label={`${t("table.filter.SHOW_ACTIVE", "Show active")}`}
+                        />
+                        <FormControlLabel
+                            control={<Checkbox checked={getFilter("SHOW_ARCHIVED") === true} onChange={setArchivedFilter} />}
                             label={`${t("table.filter.SHOW_ARCHIVED", "Show archived")}`}
                         />
                     </Stack>
                 </Stack>
             </Fade>
-        </>
+        </div>
     );
 }

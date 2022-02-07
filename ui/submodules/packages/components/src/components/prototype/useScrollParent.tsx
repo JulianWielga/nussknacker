@@ -1,24 +1,41 @@
-import { useCallback, useEffect, useState } from "react";
+import { RefObject, useRef, useState } from "react";
+import { useMutationObserver } from "rooks";
 
-function getScrollParent(element: Element): Element | null {
+function isSCrollDisabledByCss(element: Element) {
+    if (!(element instanceof Element)) {
+        return false;
+    }
+    const overflowY = getComputedStyle(element)?.overflowY;
+    return overflowY?.includes("hidden") || overflowY?.includes("visible");
+}
+
+function isScrollable(element: Element): boolean {
+    const alreadyScrolled = element.scrollTop > 0;
+    const contentOverflows = element.scrollHeight > element.clientHeight;
+    return (alreadyScrolled || contentOverflows) && !isSCrollDisabledByCss(element);
+}
+
+export function getScrollParent(element: Element): Element | null {
     if (!element) {
         return;
     }
-    if (element.scrollTop || element.scrollHeight > element.clientHeight) {
+
+    if (isScrollable(element)) {
         return element;
     }
+
     return getScrollParent(element.parentNode as Element);
 }
 
-export function useScrollParent(): [() => Element | null, (el: Element) => void, Element | null] {
-    const [element, setElement] = useState<Element>();
-    const bindRef = useCallback((current: Element) => {
-        setElement(current);
-    }, []);
+export function useScrollParent<T extends HTMLElement = HTMLDivElement>(): { scrollParent: Element; ref: RefObject<T> } {
+    const [scrollParent, setScrollParent] = useState<Element>(document.body);
+    const ref = useRef<T>();
 
-    const scrollParent = useCallback(() => {
-        return getScrollParent(element?.parentNode as Element);
-    }, [element]);
+    useMutationObserver(ref, () => {
+        if (!scrollParent || scrollParent === document.body) {
+            setScrollParent(getScrollParent(ref.current?.parentNode as Element));
+        }
+    });
 
-    return [scrollParent, bindRef, element];
+    return { scrollParent, ref };
 }
