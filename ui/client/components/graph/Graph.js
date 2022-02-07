@@ -1,6 +1,6 @@
 /* eslint-disable i18next/no-literal-string */
 import {dia} from "jointjs"
-import _, {cloneDeep, debounce, isEqual, sortBy} from "lodash"
+import _, {cloneDeep, debounce, isEqual, memoize, sortBy} from "lodash"
 import PropTypes from "prop-types"
 import React from "react"
 import {findDOMNode} from "react-dom"
@@ -34,6 +34,7 @@ export class Graph extends React.Component {
     isSubprocess: PropTypes.bool,
   }
   redrawing = false
+  espGraphRef = React.createRef()
   directedLayout = directedLayout.bind(this)
   createPaper = createPaper.bind(this)
   drawGraph = drawGraph.bind(this)
@@ -53,12 +54,21 @@ export class Graph extends React.Component {
     })
     this.nodesMoving()
 
-    this.espGraphRef = React.createRef()
   }
 
   get zoom() {
     return this.panAndZoom?.zoom || 0
   }
+
+  setEspGraphRef = (instance => {
+    const {connectDropTarget} = this.props
+    this.espGraphRef.current = instance
+    if (connectDropTarget && instance) {
+      console.log({instance})
+      const node = findDOMNode(instance)
+      connectDropTarget(node)
+    }
+  })
 
   getEspGraphRef = () => {
     return this.espGraphRef.current
@@ -429,17 +439,11 @@ export class Graph extends React.Component {
   }
 
   render() {
-    const {connectDropTarget, divId, isSubprocess} = this.props
+    const {divId, isSubprocess} = this.props
     return (
       <>
         <GraphPaperContainer
-          ref={instance => {
-            this.espGraphRef.current = instance
-            if (connectDropTarget) {
-              const node = findDOMNode(instance)
-              connectDropTarget(node)
-            }
-          }}
+          ref={this.setEspGraphRef}
           onResize={isSubprocess ? () => this.panAndZoom.fitSmallAndLargeGraphs() : null}
           id={divId}
         />
