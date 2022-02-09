@@ -1,6 +1,6 @@
 import { FirstLine, SecondLine } from "./item";
-import React, { useCallback, useMemo } from "react";
-import { RowType } from "./prototype";
+import React, { CSSProperties, useCallback, useMemo } from "react";
+import { ActiveFilters, RowType } from "./prototype";
 import { useFilterContext } from "../filters/filtersContext";
 import { FilterRules } from "../filters/filterRules";
 import ListItem from "@mui/material/ListItem";
@@ -14,12 +14,16 @@ import IconButton from "@mui/material/IconButton";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import MediationIcon from "@mui/icons-material/Mediation";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import { Avatar, Box, ListItemAvatar } from "@mui/material";
+import { Avatar, ListItemAvatar } from "@mui/material";
+import { ListRowProps } from "react-virtualized/dist/es/List";
 
-function ListRow({ row }: { row: RowType }): JSX.Element {
+function ListRow({ row, style }: { row: RowType; style: CSSProperties }): JSX.Element {
     return (
         <ListItem
             disablePadding
+            componentsProps={{
+                root: { style },
+            }}
             sx={{
                 opacity: row.isArchived ? 0.5 : 1,
             }}
@@ -62,17 +66,10 @@ function Extracted({
     scrollTop: number;
     height: number;
     onChildScroll: (params: { scrollTop: number }) => void;
-    rows: any[];
+    rows: RowType[];
 }) {
-    const rrows = useMemo(() => rows.map((r) => <ListRow key={r.id} row={r} />), [rows]);
-    const RowRenderer1 = useCallback(
-        ({ index, key, style }) => (
-            <Box key={key} style={style} sx={{ height: 72.02 }}>
-                {rrows[index]}
-            </Box>
-        ),
-        [rrows],
-    );
+    const rowHeight = 72.02;
+    const rowRenderer = useCallback(({ index, key, style }: ListRowProps) => <ListRow style={style} key={key} row={rows[index]} />, [rows]);
     return (
         <>
             <VList
@@ -84,8 +81,9 @@ function Extracted({
                 onScroll={onChildScroll}
                 scrollTop={scrollTop}
                 rowCount={rows?.length}
-                rowHeight={72.02}
-                rowRenderer={RowRenderer1}
+                rowHeight={rowHeight}
+                rowRenderer={rowRenderer}
+                overscanRowCount={10}
             />
         </>
     );
@@ -111,21 +109,25 @@ export function ItemsList(props: { data: RowType[]; isLoading?: boolean; filterR
     const { scrollParent, ref } = useScrollParent();
 
     return (
-        <div ref={ref}>
-            <Paper sx={{ flex: 1 }}>
+        <>
+            <div ref={ref}>
                 <WindowScroller scrollElement={scrollParent}>
                     {({ height = 0, width = 0, isScrolling, onChildScroll, scrollTop }) => (
-                        <Extracted
-                            height={height}
-                            width={width}
-                            isScrolling={isScrolling}
-                            onChildScroll={onChildScroll}
-                            rows={rows}
-                            scrollTop={scrollTop}
-                        />
+                        <>
+                            <Paper sx={{ flex: 1 }}>
+                                <Extracted
+                                    height={height}
+                                    width={width}
+                                    isScrolling={isScrolling}
+                                    onChildScroll={onChildScroll}
+                                    rows={rows}
+                                    scrollTop={scrollTop}
+                                />
+                            </Paper>
+                        </>
                     )}
                 </WindowScroller>
-            </Paper>
-        </div>
+            </div>
+        </>
     );
 }

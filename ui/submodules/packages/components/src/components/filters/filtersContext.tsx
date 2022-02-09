@@ -32,14 +32,16 @@ interface GetFilter<M = FiltersModel> {
     <I extends keyof M, V extends M[I]>(id: I, ensureArray?: false): V;
 }
 
-interface SetFilter<M = FiltersModel> {
+interface FilterSetter<M = FiltersModel> {
+    <I extends keyof M, V extends M[I]>(id: I, value: V): void;
+}
+
+interface SetFilter<M = FiltersModel> extends FilterSetter<M> {
     <I extends keyof M, V extends M[I]>(): CurriedFunction2<I, V, void>;
 
     <I extends keyof M, V extends M[I]>(id: I): CurriedFunction1<V, void>;
 
     <I extends keyof M, V extends M[I]>(id: __, value: V): CurriedFunction1<I, void>;
-
-    <I extends keyof M, V extends M[I]>(id: I, value: V): void;
 }
 
 interface FiltersContextType<M = FiltersModel> {
@@ -71,22 +73,47 @@ export function FiltersContextProvider({ children }: PropsWithChildren<unknown>)
         debouncedModel && setSearchParams(serializeToQuery(debouncedModel), { replace: true });
     }, [debouncedModel, setSearchParams]);
 
-    const setFilter = useCallback<SetFilter>(
-        curry((id, value) =>
-            setModel((model) =>
-                pickBy(
-                    {
-                        ...model,
-                        [id]: value,
-                    },
-                    (value) => (isArray(value) ? value.length : !!value),
-                ),
+    const setNewValue = useCallback<FilterSetter<FiltersModel>>((id, value) => {
+        setModel((model) =>
+            pickBy(
+                {
+                    ...model,
+                    [id]: value,
+                },
+                (value) => (isArray(value) ? value.length : !!value),
             ),
-        ),
-        [],
+        );
+    }, []);
+
+    const setConnectedValue = useCallback<FilterSetter<FiltersModel>>(
+        (id, value) => {
+            switch (id) {
+                case "USED_ONLY":
+                    return value && setNewValue("UNUSED_ONLY", false);
+                case "UNUSED_ONLY":
+                    return value && setNewValue("USED_ONLY", false);
+                case "HIDE_SCENARIOS":
+                    return value && setNewValue("HIDE_FRAGMENTS", false);
+                case "HIDE_FRAGMENTS":
+                    return value && setNewValue("HIDE_SCENARIOS", false);
+                case "HIDE_ACTIVE":
+                    return value && setNewValue("SHOW_ARCHIVED", true);
+                case "SHOW_ARCHIVED":
+                    return !value && setNewValue("HIDE_ACTIVE", false);
+            }
+        },
+        [setNewValue],
     );
 
-    const getFilter = useCallback<GetFilter>(
+    const setFilter = useCallback<FilterSetter<FiltersModel>>(
+        (id, value) => {
+            setNewValue(id, value);
+            setConnectedValue(id, value);
+        },
+        [setConnectedValue, setNewValue],
+    );
+
+    const getFilter = useCallback<GetFilter<FiltersModel>>(
         (field, forceArray) => {
             const value = model[field];
             return forceArray ? ensureArray(value) : value;
@@ -98,7 +125,7 @@ export function FiltersContextProvider({ children }: PropsWithChildren<unknown>)
         () => ({
             model: debouncedModel || {},
             getFilter,
-            setFilter,
+            setFilter: curry(setFilter),
         }),
         [getFilter, debouncedModel, setFilter],
     );

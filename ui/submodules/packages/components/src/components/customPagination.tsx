@@ -26,7 +26,11 @@ export function CustomPagination({ allRows }: { allRows: number }): JSX.Element 
                     )}
                 </div>
             )}
-            {pageCount > 1 ? <Pagination count={pageCount} page={page + 1}onChange={(event, value) => apiRef.current.setPage(value - 1)} /> : <span />}
+            {pageCount > 1 ? (
+                <Pagination count={pageCount} page={page + 1} onChange={(event, value) => apiRef.current.setPage(value - 1)} />
+            ) : (
+                <span />
+            )}
         </Stack>
     );
 }

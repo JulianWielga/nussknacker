@@ -7,8 +7,6 @@ import { FilterRules } from "./filters/filterRules";
 import { useFilterContext } from "./filters/filtersContext";
 import { useTranslation } from "react-i18next";
 
-type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
-
 type ColumnDef<R, K = unknown> = GridColDef & {
     field?: K;
     renderCell?: (params: GridRenderCellParams<K extends keyof R ? R[K] : never, R>) => React.ReactNode;
@@ -24,11 +22,10 @@ export interface TableViewData<T> extends Partial<DataGridProps> {
 interface TableViewProps<T> extends TableViewData<T>, Pick<BoxProps, "sx"> {
     columns: Columns<T[]>;
     filterRules?: FilterRules<T>;
-    disableZebra?: boolean;
 }
 
 export function TableWrapper<T>(props: TableViewProps<T>): JSX.Element {
-    const { data = [], filterRules, isLoading, sx, disableZebra, ...passProps } = props;
+    const { data = [], filterRules, isLoading, sx, ...passProps } = props;
     const theme = useTheme();
     const md = useMediaQuery(theme.breakpoints.up("md"));
     const { t } = useTranslation();
@@ -53,15 +50,11 @@ export function TableWrapper<T>(props: TableViewProps<T>): JSX.Element {
                 display: "flex",
                 width: "100%",
                 flex: 1,
-                minHeight: md ? "50vh" : "80vh",
+                minHeight: md ? "50vh" : "180vh",
             }}
         >
-            <Box sx={{ display: "flex", width: "100%", flex: 1 }} component={Paper}>
+            <Box sx={{ display: "flex", width: "100%", flex: 1, overflow: "auto" }} component={Paper}>
                 <DataGrid
-                    classes={{
-                        row: disableZebra ? "" : "zebra",
-                        ...passProps.classes,
-                    }}
                     isRowSelectable={() => false}
                     autoPageSize
                     rows={filtered}

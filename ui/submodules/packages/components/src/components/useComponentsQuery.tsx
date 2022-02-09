@@ -6,6 +6,7 @@ import { NkApiContext, NkIconsContext } from "../settings/nkApiProvider";
 import { DateTime } from "luxon";
 import { ProcessType } from "nussknackerUi/components/Process/types";
 import { StatusesType } from "nussknackerUi/HttpService";
+import { defaults } from "lodash";
 
 export function useComponentsQuery(): UseQueryResult<ComponentType[]> {
     const api = useContext(NkApiContext);
@@ -69,6 +70,20 @@ export function useScenariosStatusesQuery(): UseQueryResult<StatusesType> {
         enabled: !!api,
         refetchInterval: 15000,
     });
+}
+
+export function useScenariosWithStatus(): UseQueryResult<ProcessType[]> {
+    const scenarios = useScenariosQuery();
+    const statuses = useScenariosStatusesQuery();
+    return useMemo(() => {
+        const { data = [] } = scenarios;
+        return defaults(scenarios, {
+            data: data.map((scenario) => ({
+                ...scenario,
+                state: scenario.isSubprocess ? {} : statuses?.[scenario.id] || scenario.state,
+            })),
+        });
+    }, [scenarios, statuses]);
 }
 
 export function useComponentQuery(componentId: string): UseQueryResult<ComponentType> {

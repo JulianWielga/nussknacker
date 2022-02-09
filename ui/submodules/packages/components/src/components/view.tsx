@@ -1,4 +1,4 @@
-import { Box, Container, Stack, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Container, Paper, Stack, useMediaQuery, useTheme } from "@mui/material";
 import React, { PropsWithChildren } from "react";
 
 export function View({ children, inTab }: PropsWithChildren<{ inTab?: boolean }>): JSX.Element {
@@ -16,13 +16,22 @@ export function View({ children, inTab }: PropsWithChildren<{ inTab?: boolean }>
                 maxWidth: inTab ? "100%" : "100vw",
             }}
         >
-            <Box
-                // display="flex" // needed for components view
-                flex={1}
-                sx={{ overflow: "hidden", overflowY: "auto" }}
-            >
-                <Container maxWidth="xl" disableGutters={!md}>
-                    <Stack direction="column" justifyContent="center" height="100%" spacing={2} p={md ? 2 : 0.5}>
+            <Box display="flex" flex={1} sx={{ overflow: "hidden", overflowY: "auto" }}>
+                <Container
+                    maxWidth="xl"
+                    disableGutters={!md}
+                    sx={{ display: "flex", justifyContent: "flex-start", flexDirection: "column" }}
+                >
+                    <Stack
+                        direction="column"
+                        sx={{
+                            justifyContent: "flex-start",
+                            p: (theme) => (theme.breakpoints.up("md") ? 2 : 0),
+                        }}
+                        flex={1}
+                        // height="100%"
+                        spacing={2}
+                    >
                         {children}
                     </Stack>
                 </Container>

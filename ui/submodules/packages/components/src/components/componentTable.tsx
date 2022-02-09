@@ -8,7 +8,6 @@ import { ComponentGroupNameCell } from "./cellRenderers/componentGroupNameCell";
 import { NameCell } from "./cellRenderers/nameCell";
 import { UsageCountCell } from "./cellRenderers/usageCountCell";
 import { FILTER_RULES } from "./filters/filterRules";
-import { useFilterContext } from "./filters/filtersContext";
 import { Columns, TableViewData, TableWrapper } from "./tableWrapper";
 import { IconImg } from "./cellRenderers/iconImg";
 
@@ -72,6 +71,5 @@ export function ComponentTable(props: TableViewData<ComponentType>): JSX.Element
         [t],
     );
 
-    return <TableWrapper<ComponentType> columns={columns} filterRules={FILTER_RULES} data={data}
-                                        isLoading={isLoading} />;
+    return <TableWrapper<ComponentType> columns={columns} filterRules={FILTER_RULES} data={data} isLoading={isLoading} />;
 }
