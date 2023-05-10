@@ -1,1 +1,2 @@
-export type ToolbarButtonProps = { name?: string; title?: string; icon?: string; disabled?: boolean };
+
+export type ToolbarButtonProps = {name?: string, title?: string, icon?: string, disabled?: boolean}

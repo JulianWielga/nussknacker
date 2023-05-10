@@ -1,78 +1,76 @@
-import React, { PropsWithChildren, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { ProcessStateType, ProcessType } from "./types";
-import { Popover } from "react-bootstrap";
-import { OverlayTrigger } from "react-bootstrap/lib";
-import ProcessStateUtils from "./ProcessStateUtils";
-import { css } from "@emotion/css";
-import UrlIcon from "../UrlIcon";
-import { useTheme } from "@emotion/react";
-import { ProcessId } from "../../types";
+import React, {PropsWithChildren, useMemo} from "react"
+import {useTranslation} from "react-i18next"
+import {ProcessStateType, ProcessType} from "./types"
+import {Popover} from "react-bootstrap"
+import {OverlayTrigger} from "react-bootstrap/lib"
+import ProcessStateUtils from "./ProcessStateUtils"
+import {css} from "@emotion/css"
+import UrlIcon from "../UrlIcon"
+import {useTheme} from "@emotion/react"
+import {ProcessId} from "../../types"
 
 interface Props {
-    processState?: ProcessStateType;
-    process: ProcessType;
+  processState?: ProcessStateType,
+  process: ProcessType,
 }
 
-function Errors({ state }: { state: ProcessStateType }) {
-    const { t } = useTranslation();
+function Errors({state}: { state: ProcessStateType }) {
+  const {t} = useTranslation()
 
-    if (state.errors?.length < 1) {
-        return null;
-    }
+  if (state.errors?.length < 1) {
+    return null
+  }
 
-    return (
-        <div>
-            <span>{t("stateIcon.errors", "Errors:")}</span>
-            <ul>
-                {state.errors.map((error, key) => (
-                    <li key={key}>{error}</li>
-                ))}
-            </ul>
-        </div>
-    );
+  return (
+    <div>
+      <span>{t("stateIcon.errors", "Errors:")}</span>
+      <ul>
+        {state.errors.map((error, key) => <li key={key}>{error}</li>)}
+      </ul>
+    </div>
+  )
 }
 
-function StateIconPopover({
-    processName,
-    processState,
-    tooltip,
-    children,
-}: PropsWithChildren<{
-    processState: ProcessStateType;
-    processName: ProcessId;
-    tooltip: string;
+function StateIconPopover({processName, processState, tooltip, children}: PropsWithChildren<{
+  processState: ProcessStateType,
+  processName: ProcessId,
+  tooltip: string,
 }>) {
-    const theme = useTheme();
-    const imagePopover = useMemo(() => {
-        const className = css({
-            marginTop: "5px",
-            "&, h3": { backgroundColor: theme.colors?.primaryBackground },
-        });
-        return (
-            <Popover id="state-icon-popover" className={className} title={processName}>
-                <strong>{tooltip}</strong>
-                <Errors state={processState} />
-            </Popover>
-        );
-    }, [processName, processState, theme.colors?.primaryBackground, tooltip]);
-
+  const theme = useTheme()
+  const imagePopover = useMemo(() => {
+    const className = css({
+      marginTop: "5px",
+      "&, h3": {backgroundColor: theme.colors?.primaryBackground},
+    })
     return (
-        <OverlayTrigger trigger="click" placement="left" overlay={imagePopover}>
-            {children}
-        </OverlayTrigger>
-    );
+      <Popover id="state-icon-popover" className={className} title={processName}>
+        <strong>{tooltip}</strong>
+        <Errors state={processState}/>
+      </Popover>
+    )
+  }, [processName, processState, theme.colors?.primaryBackground, tooltip])
+
+  return (
+    <OverlayTrigger trigger="click" placement="left" overlay={imagePopover}>
+      {children}
+    </OverlayTrigger>
+  )
 }
 
-function ProcessStateIcon({ process, processState }: Props) {
-    const icon = ProcessStateUtils.getStatusIcon(process, processState);
-    const tooltip = ProcessStateUtils.getStatusTooltip(process, processState);
+function ProcessStateIcon({process, processState}: Props) {
+  const icon = ProcessStateUtils.getStatusIcon(process, processState)
+  const tooltip = ProcessStateUtils.getStatusTooltip(process, processState)
 
-    return (
-        <StateIconPopover processName={process.name} processState={processState} tooltip={tooltip}>
-            <UrlIcon src={icon} title={tooltip} />
-        </StateIconPopover>
-    );
+  return (
+    <StateIconPopover
+      processName={process.name}
+      processState={processState}
+      tooltip={tooltip}
+    >
+      <UrlIcon src={icon} title={tooltip}/>
+    </StateIconPopover>
+  )
 }
 
-export default ProcessStateIcon;
+export default ProcessStateIcon
+
