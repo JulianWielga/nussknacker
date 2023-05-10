@@ -1,9 +1,12 @@
 {
-  "name": "nussknackerUi",
-  "exposes": {
-    "./config": "./src/config",
-    "./HttpService": "./src/http/HttpService",
-    "./Auth": "./src/containers/Auth/AuthInitializer",
-    "./Icon": "./src/components/UrlIcon"
-  }
+    "name": "nussknackerUi",
+    "exposes": {
+        "./config": "./src/config",
+        "./HttpService": "./src/http/HttpService",
+        "./Auth": "./src/containers/Auth/AuthInitializer",
+        "./Icon": "./src/components/UrlIcon"
+    },
+    "remotes": {
+        "nuTutorial": "nuTutorial@http://localhost:3012/remoteEntry.js"
+    }
 }
