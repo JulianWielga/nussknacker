@@ -87,8 +87,9 @@ export function reducer(state: SettingsState = initialState, action: Action): Se
                 ...state,
                 processToolbarsConfiguration: {
                     ...action.data,
-                    [ToolbarsSide.TopRight]: [{ id: "survey-panel" }, ...action.data.topRight],
-                    [ToolbarsSide.BottomRight]: [...action.data.bottomRight, ...DEV_TOOLBARS],
+                    // [ToolbarsSide.TopRight]: [{ id: "survey-panel" }, ...action.data.topRight],
+                    [ToolbarsSide.TopRight]: [],
+                    [ToolbarsSide.TopLeft]: [...DEV_TOOLBARS],
                 },
             };
         }

@@ -1,10 +1,11 @@
+import { ModuleUrl } from "@touk/federated-component";
 import React, { PropsWithChildren, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { splitUrl } from "@touk/federated-component";
-import { ToolbarButtons } from "./toolbarButtons";
-import { ToolbarConfig } from "../toolbarSettings/types";
-import { ToolbarWrapper } from "./toolbarWrapper/ToolbarWrapper";
+import { useWindows, WindowKind } from "../../windowManager";
 import { RemoteComponent } from "../RemoteComponent";
+import { ToolbarConfig } from "../toolbarSettings/types";
+import { ToolbarButtons } from "./toolbarButtons";
+import { ToolbarWrapper } from "./toolbarWrapper/ToolbarWrapper";
 
 export type ToolbarPanelProps = PropsWithChildren<Omit<ToolbarConfig, "buttons">>;
 
@@ -22,8 +23,6 @@ export function DefaultToolbarPanel(props: ToolbarPanelProps): ReactElement {
 }
 
 function RemoteToolbarContent(props: ToolbarPanelProps): ReactElement {
-    const { componentUrl, ...passProps } = props;
-    const [url, scope] = useMemo(() => splitUrl(componentUrl), [componentUrl]);
-
-    return <RemoteComponent url={url} scope={scope} {...passProps} />;
+    const { componentUrl, additionalParams, ...passProps } = props;
+    return <RemoteComponent url={componentUrl} {...additionalParams} {...passProps} />;
 }

@@ -1,14 +1,14 @@
 import { alpha, createTheme, Palette, PaletteMode } from "@mui/material";
-import { fontFamily, formLabelWidth, globalStyles } from "./styles";
-import { blendDarken, blendLighten } from "./helpers";
 import { deepmerge } from "@mui/utils";
-import { lightModePalette } from "./lightModePalette";
-import { darkModePalette } from "./darkModePalette";
+import { Dispatch, SetStateAction } from "react";
+import NodeUtils from "../../components/graph/NodeUtils";
+import { NodeType } from "../../types";
 import { WindowKind } from "../../windowManager/WindowKind";
 import { EnvironmentTagColor } from "../EnvironmentTag";
-import { NodeType } from "../../types";
-import NodeUtils from "../../components/graph/NodeUtils";
-import { Dispatch, SetStateAction } from "react";
+import { darkModePalette } from "./darkModePalette";
+import { blendDarken, blendLighten } from "./helpers";
+import { lightModePalette } from "./lightModePalette";
+import { fontFamily, formLabelWidth, globalStyles } from "./styles";
 
 declare module "@mui/material/FormHelperText" {
     interface FormHelperTextPropsVariantOverrides {
@@ -176,25 +176,30 @@ export const nuTheme = (mode: PaletteMode, setMode: Dispatch<SetStateAction<Pale
                     styleOverrides: (theme) => globalStyles(theme),
                 },
                 MuiFormControl: {
+                    defaultProps: {
+                        variant: "standard",
+                    },
                     styleOverrides: {
-                        root: {
-                            display: "flex",
-                            flexDirection: "row",
-                            margin: "16px 0",
+                        root: ({ theme, ownerState }) => {
+                            if (ownerState.variant === "standard") {
+                                return {
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    margin: "16px 0",
+                                    ".MuiFormLabel-root": {
+                                        ...theme.typography.body2,
+                                        display: "flex",
+                                        flexBasis: formLabelWidth,
+                                        maxWidth: "20em",
+                                        overflowWrap: "anywhere",
+                                        marginTop: "9px",
+                                    },
+                                };
+                            }
                         },
                     },
                 },
                 MuiFormLabel: {
-                    styleOverrides: {
-                        root: ({ theme }) => ({
-                            ...theme.typography.body2,
-                            display: "flex",
-                            marginTop: "9px",
-                            flexBasis: formLabelWidth,
-                            maxWidth: "20em",
-                            overflowWrap: "anywhere",
-                        }),
-                    },
                     defaultProps: {
                         focused: false,
                     },
